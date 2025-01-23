@@ -70,7 +70,7 @@ float fbm2 ( in vec3 st) {
 
 void main(void) {
 
-    vec2 targetUvPos = vec2(0.52,0.52);
+    vec2 targetUvPos = vec2(0.0,0.0);
     float stormSize = 0.1;
     float edgeSmoothness = 0.01;
 

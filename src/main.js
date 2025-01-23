@@ -25,7 +25,7 @@ const createScene = function() {
   scene.createDefaultCameraOrLight(true, true, true);
 
   // Sphere mesh
-  const sphere = BABYLON.MeshBuilder.CreateSphere("sphere", { diameter: 2 }, scene);
+  const sphere = BABYLON.MeshBuilder.CreateSphere("sphere", { segments: 16, diameter: 2 }, scene);
   sphere.position.y = 1; // Move the sphere slightly above the ground to make it visible
   
   const torus = BABYLON.MeshBuilder.CreateTorus("torus", { thickness: 0.1, diameter: 4}, scene);
@@ -46,18 +46,49 @@ const createScene = function() {
       "fbmShiftValue",
       "fbmAmplitudeValue",
     ],
-    
+  });
+  const shaderMaterial2 = new BABYLON.ShaderMaterial("shader", scene, "./gasGiantV1", {
+    attributes: ["position", "normal", "uv"],
+    uniforms: [
+      "world",
+      "worldView",
+      "worldViewProjection",
+      "view",
+      "projection",
+      "time",
+      "speed",
+      "fbmValue", 
+      "fbmOctavesValue",
+      "fbmShiftValue",
+      "fbmAmplitudeValue",
+    ],
   });
 
   // Texture for the material
   const mainTexture = new BABYLON.Texture("wood.jpg", scene); // Example texture
-  
+  const northStormTexture = new BABYLON.Texture("darkWood.jpg", scene); // Example texture
+
   shaderMaterial.setTexture("textureSampler", mainTexture);
+  shaderMaterial2.setTexture("textureSampler", northStormTexture);
+  var multiMaterial = new BABYLON.MultiMaterial("multi", scene);
+  var standardMaterial = new BABYLON.StandardMaterial("standardMat", scene);
+  standardMaterial.diffuseColor = new BABYLON.Color3(1, 0, 0);
+  
+  // Add materials to the MultiMaterial
+  multiMaterial.subMaterials.push(shaderMaterial);
+  multiMaterial.subMaterials.push(shaderMaterial2);
+
+  sphere.subMeshes = [];
+  var verticesCount = sphere.getTotalVertices();
+  
+// Top submesh (first 20%)
+new BABYLON.SubMesh(1, 0, verticesCount, 0, 432, sphere);
+new BABYLON.SubMesh(0, 0, verticesCount, 432, 3456, sphere);
 
   // Assign the shader material to the sphere
-  sphere.material = shaderMaterial;
+  sphere.material = multiMaterial;
 
-  // Register before render to animate the shader
+  // Register before render to animate the shader 
   scene.registerBeforeRender(function() {
     const time = performance.now() * 0.001; // Time in seconds
 
