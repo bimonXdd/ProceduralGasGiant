@@ -1,0 +1,19 @@
+{
+  "name": "procedurallygeneratedgasgiant",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview"
+  },
+  "devDependencies": {
+    "@babylonjs/core": "^7.39.1",
+    "extended-random": "^1.2.2",
+    "glslify": "^7.1.1",
+    "squirrel-noise": "^1.0.0",
+    "vite": "^6.0.1",
+    "vite-plugin-glsl": "^1.3.1"
+  }
+}

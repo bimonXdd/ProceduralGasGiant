@@ -1,0 +1,43 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/svg+xml" href="/vite.svg" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Vite App</title>
+    <link rel="stylesheet" href="./src/style.css">
+  </head>
+  <body>
+    <div id="app"></div>
+    <div id="canvasZone"><canvas id="renderCanvas"></canvas></div>
+    <script type="module" src="/src/main.js"></script>
+    <div id="sliderContainer">
+      <div id="speedSliderContainer">
+        <p>Speed Of simulation: </p>
+        <input type="range" id="slider" min="0.0" max="0.18" step="0.001" value="0.006" />
+        <span id="speedValue">0</span>
+      </div>
+      <div id="fbmValueSliderContainer">
+        <p>FBM value: </p>
+        <input type="range" id="fbmValue" min="0.02" max="10.0" step="0.1" value="0.1" />
+        <span id="fbmValueText">0</span>
+      </div>
+      <div id="fbmValueSliderContainer">
+        <p>FBM Octaves: </p>
+        <input type="range" id="fbmOctavesValue" min="5" max="16.0" step="1" value="8" />
+        <span id="fbmOctavesText">5</span>
+      </div>
+      <div id="fbmValueSliderContainer">
+        <p>FBM Shift: </p>
+        <input type="range" id="fbmShiftValue" min="0" max="360" step="10 " value="180" />
+        <span id="fbmShiftText">20</span>
+      </div>
+      <div id="fbmValueSliderContainer">
+        <p>FBM amplitude: </p>
+        <input type="range" id="fbmAmplitudeValue"  min="0.002" max="0.08" step="0.001" value="0.006" />
+        <span id="fbmAmplitudeText">0</span>
+      </div>
+
+    </div>
+  </body>
+</html>
