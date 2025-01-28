@@ -18,7 +18,6 @@ var fbmShiftValueText = document.getElementById("fbmShiftText");
 
 const fbmAmplitudeValue = document.getElementById("fbmAmplitudeValue");
 var fbmAmplitudeValueText = document.getElementById("fbmAmplitudeText"); 
-let time = 0;
 
 
 const createScene = function() {
@@ -98,51 +97,26 @@ const createScene = function() {
 
   // sphere.material = multiMaterial;
 
+
   const plain = BABYLON.MeshBuilder.CreatePlane("plain", { size: 2});
-  plain.position.z = 1;
-  const particleCount = 1;
-  const textureWidth = 1024;
-  const textureHeight = 1024;
-  const deltaTime = engine.getDeltaTime() * 0.001;
-  // Initialize particle data (position and velocity)
-  const particleData = new Float32Array(textureWidth * textureHeight * 6);
 
-  const particleDataTexture = new BABYLON.RawTexture(
-    particleData, 
-    textureWidth, 
-    textureHeight, 
-    BABYLON.Engine.TEXTUREFORMAT_RGBA, 
-    scene, 
-    false, 
-    false, 
-    BABYLON.Texture.NEAREST_SAMPLINGMODE, 
-    BABYLON.Engine.TEXTURETYPE_FLOAT
-);
-const standardTexture = new BABYLON.Texture('images/wood.jpg', scene);
+  const nrOfParticles = 20;
+  const particleCoordinates = new Float32Array(nrOfParticles*2);
+//init particles
+  for (let i = 0; i < nrOfParticles; i++) {
+    particleCoordinates[i * 2] = Math.random() * 2.0 - 1.0; // x position (-1 to 1)
+    particleCoordinates[i * 2 + 1] = Math.random() * 2.0 - 1.0; // y position (-1 to 1)
+  }
 
-const particleMaterial = new BABYLON.ShaderMaterial("particleShader", scene, "./curlNoise", {
-  attributes: ["position", "uv"],
-  uniforms: ["worldViewProjection", "particleDataTexture", "time"]
-});
-particleMaterial.setTexture("particleDataTexture", standardTexture);
-particleMaterial.setFloat("time", 0.6);
-
-
-plain.material = particleMaterial;
-
-
-//particleData[i * 4 + 0] += 0.01 * Math.random(); // Update X position
-particleDataTexture.update(particleData);
-
-
-
-  //CPU INITIAL PARTICLE STUFF
-  // const dynamicTexture = new BABYLON.DynamicTexture("dynamicTexture", { width: 1024, height: 1024 }, scene, false);
-  // const planeMaterial = new BABYLON.StandardMaterial("planeMaterial", scene);
+  const dynamicTexture = new BABYLON.DynamicTexture("dynamicTexture", { width: 1024, height: 1024 }, scene, false);
+  const planeMaterial = new BABYLON.StandardMaterial("planeMaterial", scene);
   
-  // planeMaterial.diffuseTexture = dynamicTexture;
-  // plain.material = planeMaterial;
+  planeMaterial.diffuseTexture = dynamicTexture;
+  plain.material = planeMaterial;
 
+
+  //Pass the particle positions as a buffer
+  const particleBuffer = new BABYLON.Buffer(engine, particleCoordinates, false, 2);
 
 //   const shaderMaterial = new BABYLON.ShaderMaterial("particleShader", scene, "curlNoise", {
 //     attributes: ["position"],
@@ -152,47 +126,43 @@ particleDataTexture.update(particleData);
 //shaderMaterial.setTexture("positionTexture", particleTexture);
 //shaderMaterial.setVector2("resolution", new BABYLON.Vector2(canvas.width, canvas.height));
 
+let particles = [];
+for (let i = 0; i < 10000; i++) {
+    particles.push({
+        x: Math.random() * 1024,
+        y: Math.random() * 1024,
+        vx: Math.random() * 2 - 1,
+        vy: Math.random() * 2 - 1,
+        size: 1,
+        color: `hsl(${Math.random() * 360}, 100%, 50%)`
+    });
+}
 
-let timeFrame = 0;
-let i = 0;
-let index = i * 3; 
 
 scene.registerBeforeRender(function() {
-  const currentTime = performance.now()*0.1;  // Time in seconds
-  particleMaterial.setFloat("time", currentTime); // Update time uniform
-  const deltaTime = engine.getDeltaTime() * 0.001;
+    const time = performance.now() * 0.001; // Time in seconds
 
-    i +=1;
-    index = i * 3
-    particleData[index] = 1;  
-    particleData[index+1] = 1;  
-    particleData[index+2] = 1;
+    const speed = parseFloat(slider.value); // Get speed value from the slider
 
-    particleData[index-1] = 0;  
-    particleData[index-2] = 0;  
-    particleData[index-3] = 0;
+    dynamicTexture.getContext().clearRect(0, 0, 1024, 1024);
 
-    timeFrame += 1; 
-    //particleDataTexture.update(particleData);
+    // Update and draw each particle
+    particles.forEach(p => {
+        p.x += p.vx;
+        p.y += p.vy;
 
-    // dynamicTexture.getContext().clearRect(0, 0, 1024, 1024);
+        // Bounce particles off the edges
+        if (p.x < 0 || p.x > 1024) p.vx *= -1;
+        if (p.y < 0 || p.y > 1024) p.vy *= -1;
 
-    // particles.forEach(p => {
-    //     p.x += p.vx;
-    //     p.y += p.vy;
-
-    //     // Bounce particles off the edges
-    //     if (p.x < 0 || p.x > 1024) p.vx *= -1;
-    //     if (p.y < 0 || p.y > 1024) p.vy *= -1;
-
-    //     dynamicTexture.getContext().beginPath();
-    //     dynamicTexture.getContext().arc(p.x, p.y, p.size, 0, 2 * Math.PI);
-    //     dynamicTexture.getContext().fillStyle = p.color;  
-    //     dynamicTexture.getContext().fill();
-    // });
+        dynamicTexture.getContext().beginPath();
+        dynamicTexture.getContext().arc(p.x, p.y, p.size, 0, 2 * Math.PI);
+        dynamicTexture.getContext().fillStyle = p.color;  
+        dynamicTexture.getContext().fill();
+    });
 
     // Update the dynamic texture
-    //dynamicTexture.update();
+    dynamicTexture.update();
     // speedValue.textContent  = speed;
 
     // fbmValueText.textContent = parseFloat(fbmValue.value);
@@ -203,14 +173,16 @@ scene.registerBeforeRender(function() {
 
     // fbmAmplitudeValueText.textContent = fbmAmplitudeValue.value;
     // Check if the speed value is valid
-
+    if (isNaN(speed)) {
+      console.error('Invalid speed value from slider:', slider.value);
+    } else {
       //shaderMaterial.setFloat("time", time);
       // shaderMaterial.setFloat("speed", speed); // Pass speed to the shader
       // shaderMaterial.setInt("fbmOctavesValue", fbmOctavesValue.value);
       // shaderMaterial.setFloat("fbmValue", parseFloat(fbmValue.value)); // Static value for fbmValue (you can modify this based on your needs)
       // shaderMaterial.setInt("fbmShiftValue", fbmShiftValue.value);
       // shaderMaterial.setFloat("fbmAmplitudeValue", parseFloat(fbmAmplitudeValue.value));
-    
+    }
   });
 
   return scene;
@@ -219,8 +191,6 @@ scene.registerBeforeRender(function() {
 // Create the scene and run the engine
 const scene = createScene();
 engine.runRenderLoop(function() {
-
-  time += 0.01; // Increment time
   scene.render();
 });
 
