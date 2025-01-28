@@ -57,6 +57,7 @@ const createScene = function() {
       "view",
       "projection",
       "time",
+      "seed",
     ],
   });
 
@@ -64,7 +65,7 @@ const createScene = function() {
   // Texture for the material
   const mainTexture = new BABYLON.Texture("wood.jpg", scene); // Example texture
   const northStormTexture = new BABYLON.Texture("darkWood.jpg", scene); // Example texture
-
+  curlNoise.setFloat("seed", Math.random()*1000);
   curlNoise.setTexture("textureSampler", mainTexture);
   shaderMaterial.setTexture("textureSampler2", northStormTexture);
   var multiMaterial = new BABYLON.MultiMaterial("multi", scene);

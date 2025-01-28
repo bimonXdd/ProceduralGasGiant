@@ -8,17 +8,15 @@ in vec2 vUV;
 
 uniform mat4 world;
 uniform float time;
-uniform float fbmValue;
 uniform float speed;
-uniform int fbmOctavesValue;
-uniform int fbmShiftValue;
-uniform float fbmAmplitudeValue;
+uniform float seed;
+
 // Refs
 uniform vec3 cameraPosition;
 out vec4 fragColor;
 
 vec2 randomGradient(vec2 p) {
-    float random = fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453123);
+    float random = fract(sin(dot(p, vec2(seed, 311.7))) * 43758.5453123);
     return vec2(cos(2.0 * 3.14159 * random), sin(2.0 * 3.14159 * random));
 }
 
@@ -65,11 +63,9 @@ float perlin(vec2 uv) {
     return value;
 }
 
-
 void main(void) {
-    const float zoom = 15.0;
-    vec3 st = vec3(vUV*15.0,1.0);
-    //st += st * abs(sin(time*0.1)*3.0);
+    const float zoom = 7.0;
+    vec3 st = vec3(vUV*zoom,1.0);
     st += time* speed;
     
     float normalizedPerlin = (perlin(st.xy) + 1.0) * 0.5;
