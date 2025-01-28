@@ -44,10 +44,7 @@ float noise (in vec3 _st) {
             (c - a)* u.y * (1.0 - u.x) +
             (d - b) * u.x * u.y;
 }
-vec2 randomGradient(vec2 p) {
-    float random = fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453123);
-    return vec2(cos(2.0 * 3.14159 * random), sin(2.0 * 3.14159 * random));
-}
+
 //https://thebookofshaders.com/13/
 #define NUM_OCTAVES fbmOctavesValue
 float fbm2 ( in vec3 st) {
@@ -72,47 +69,7 @@ float fbm2 ( in vec3 st) {
     v = mix(v, noise(st + vec3(0.1, 0.1, 0.1)), 0.10);  // Here, both are floats
     return v;
 }
-vec2 fade(vec2 t) {
-    return t * t * (3.0 - 2.0 * t);
-}
-float perlin(vec2 uv) {
-    // Cell corners
-    vec2 p0 = floor(uv);  // Bottom-left corner
-    vec2 p1 = p0 + vec2(1.0, 0.0);  // Bottom-right corner
-    vec2 p2 = p0 + vec2(0.0, 1.0);  // Top-left corner
-    vec2 p3 = p0 + vec2(1.0, 1.0);  // Top-right corner
 
-    // Local coordinates within the cell
-    vec2 localPos = fract(uv);
-
-    // Fade the local position
-    vec2 fadePos = fade(localPos);
-
-    // Gradients at each corner
-    vec2 g0 = randomGradient(p0);
-    vec2 g1 = randomGradient(p1);
-    vec2 g2 = randomGradient(p2);
-    vec2 g3 = randomGradient(p3);
-
-    // Distance vectors
-    vec2 d0 = localPos - vec2(0.0, 0.0);
-    vec2 d1 = localPos - vec2(1.0, 0.0);
-    vec2 d2 = localPos - vec2(0.0, 1.0);
-    vec2 d3 = localPos - vec2(1.0, 1.0);
-
-    // Dot products
-    float dot0 = dot(g0, d0);
-    float dot1 = dot(g1, d1);
-    float dot2 = dot(g2, d2);
-    float dot3 = dot(g3, d3);
-
-    // Interpolate along x and y axes
-    float lerpX0 = mix(dot0, dot1, fadePos.x);
-    float lerpX1 = mix(dot2, dot3, fadePos.x);
-    float value = mix(lerpX0, lerpX1, fadePos.y);
-
-    return value;
-}
 void main(void) {
 
     vec2 targetUvPos = vec2(0.5,0.5);
@@ -122,8 +79,7 @@ void main(void) {
     float dist = length(vUV - targetUvPos);
     float stormFalloff = smoothstep(stormSize, stormSize - edgeSmoothness, dist);
 
-    const float zoom = 15.0;
-    vec3 st = vec3(vUV*15.0,1.0);
+    vec3 st = vec3(vUV*1.,1.0);
     //st += st * abs(sin(time*0.1)*3.0);
     st += time* speed;
     vec3 q = vec3(0.1);
@@ -142,6 +98,10 @@ void main(void) {
 
     
     vec3 stormColor = texture(textureSampler, fract(vUV)).rgb; 
+    if (stormFalloff > 0.2)
+    {
+        stormColor = texture(textureSampler2, fract(vUV+q.x)).rgb; 
+    } 
 
     color = mix(color, stormColor, stormFalloff);
 
@@ -169,11 +129,8 @@ void main(void) {
 //-----------------------LIGHT END--------------------------
 
 //for light add *ndl
-float normalizedPerlin = (perlin(st.xy) + 1.0) * 0.5;
-
-  float smoothPerlin = smoothstep(0.3, 0.7, normalizedPerlin);
-
-    fragColor = vec4(vec3(smoothPerlin), 1.);
+  
+    fragColor = vec4(color, 1.);
 
 
 }
