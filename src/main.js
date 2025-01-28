@@ -25,14 +25,14 @@ const createScene = function() {
   scene.createDefaultCameraOrLight(true, true, true);
 
   // Sphere mesh
-  const sphere = BABYLON.MeshBuilder.CreateSphere("sphere", { segments: 16, diameter: 2 }, scene);
-  sphere.position.y = 1; // Move the sphere slightly above the ground to make it visible
-  
-  const torus = BABYLON.MeshBuilder.CreateTorus("torus", { thickness: 0.1, diameter: 4}, scene);
-  torus.position = new BABYLON.Vector3(0, 1, 0);
-  torus.rotation.z = 0.4;
+  //const sphere = BABYLON.MeshBuilder.CreateSphere("sphere", { segments: 16, diameter: 2 }, scene);
+  //sphere.position.y = 1; // Move the sphere slightly above the ground to make it visible
+  const plane = BABYLON.MeshBuilder.CreatePlane("plain",scene);
+  //const torus = BABYLON.MeshBuilder.CreateTorus("torus", { thickness: 0.1, diameter: 4}, scene);
+  //torus.position = new BABYLON.Vector3(0, 1, 0);
+  //torus.rotation.z = 0.4;
   const shaderMaterial = new BABYLON.ShaderMaterial("shader", scene, "./gasGiantV1", {
-    attributes: ["position", "normal", "uv"],
+    attributes: ["position", "normal", "uv", "uv2"],
     uniforms: [
       "world",
       "worldView",
@@ -45,9 +45,10 @@ const createScene = function() {
       "fbmOctavesValue",
       "fbmShiftValue",
       "fbmAmplitudeValue",
+      "speed",
     ],
   });
-  const shaderMaterial2 = new BABYLON.ShaderMaterial("shader", scene, "./gasGiantV1", {
+  const curlNoise = new BABYLON.ShaderMaterial("shader", scene, "./curlNoise", {
     attributes: ["position", "normal", "uv"],
     uniforms: [
       "world",
@@ -56,39 +57,22 @@ const createScene = function() {
       "view",
       "projection",
       "time",
-      "speed",
-      "fbmValue", 
-      "fbmOctavesValue",
-      "fbmShiftValue",
-      "fbmAmplitudeValue",
     ],
   });
+
 
   // Texture for the material
   const mainTexture = new BABYLON.Texture("wood.jpg", scene); // Example texture
   const northStormTexture = new BABYLON.Texture("darkWood.jpg", scene); // Example texture
 
-  shaderMaterial.setTexture("textureSampler", mainTexture);
-  shaderMaterial2.setTexture("textureSampler", northStormTexture);
+  curlNoise.setTexture("textureSampler", mainTexture);
+  shaderMaterial.setTexture("textureSampler2", northStormTexture);
   var multiMaterial = new BABYLON.MultiMaterial("multi", scene);
   var standardMaterial = new BABYLON.StandardMaterial("standardMat", scene);
   standardMaterial.diffuseColor = new BABYLON.Color3(1, 0, 0);
   
-  // Add materials to the MultiMaterial
-  multiMaterial.subMaterials.push(shaderMaterial);
-  multiMaterial.subMaterials.push(shaderMaterial2);
+  plane.material = curlNoise;
 
-  sphere.subMeshes = [];
-  var verticesCount = sphere.getTotalVertices();
-  
-// Top submesh (first 20%)
-new BABYLON.SubMesh(1, 0, verticesCount, 0, 432, sphere);
-new BABYLON.SubMesh(0, 0, verticesCount, 432, 3456, sphere);
-
-  // Assign the shader material to the sphere
-  sphere.material = multiMaterial;
-
-  // Register before render to animate the shader 
   scene.registerBeforeRender(function() {
     const time = performance.now() * 0.001; // Time in seconds
 
@@ -112,6 +96,9 @@ new BABYLON.SubMesh(0, 0, verticesCount, 432, 3456, sphere);
       shaderMaterial.setFloat("fbmValue", parseFloat(fbmValue.value)); // Static value for fbmValue (you can modify this based on your needs)
       shaderMaterial.setInt("fbmShiftValue", fbmShiftValue.value);
       shaderMaterial.setFloat("fbmAmplitudeValue", parseFloat(fbmAmplitudeValue.value));
+      const width = engine.getRenderWidth();
+      const height = engine.getRenderHeight();
+      shaderMaterial.setVector2("resolution", new BABYLON.Vector2(width, height));
     }
   });
 
