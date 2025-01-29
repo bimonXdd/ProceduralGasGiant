@@ -20,6 +20,7 @@ vec2 randomGradient(vec2 p) {
     return vec2(cos(2.0 * 3.14159 * random), sin(2.0 * 3.14159 * random));
 }
 
+//Cubic Hermite interpolation 
 vec2 fade(vec2 t) {
     return t * t * (3.0 - 2.0 * t);
 }
@@ -32,6 +33,7 @@ float perlin(vec2 uv) {
     vec2 p3 = p0 + vec2(1.0, 1.0);  // Top-right corner
 
     // Local coordinates within the cell
+    //fract(x) = x - floor(x).
     vec2 localPos = fract(uv);
 
     // Fade the local position
@@ -66,7 +68,7 @@ float perlin(vec2 uv) {
 void main(void) {
     const float zoom = 7.0;
     vec3 st = vec3(vUV*zoom,1.0);
-    st += time* speed;
+    st += time * speed;
     
     float normalizedPerlin = (perlin(st.xy) + 1.0) * 0.5;
 
@@ -96,5 +98,5 @@ void main(void) {
 
 //for light add *ndl
 
-    fragColor = vec4(vec3(smoothPerlin), 1.);
+    fragColor = vec4(vec3(normalizedPerlin), 1.);
 }
