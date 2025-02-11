@@ -10,91 +10,78 @@ uniform mat4 world;
 uniform float time;
 uniform float speed;
 uniform float seed;
+uniform sampler2D textureSampler;
 
 // Refs
 uniform vec3 cameraPosition;
 out vec4 fragColor;
 
-vec2 randomGradient(vec2 p) {
-    float random = fract(sin(dot(p, vec2(seed, 311.7))) * 43758.5453123);
-    return vec2(cos(2.0 * 3.14159 * random), sin(2.0 * 3.14159 * random));
+struct Particle {
+    vec2 position;
+    vec2 velocity;
+};
+
+// 2D hash function (non-production ready)
+vec2 hash( in ivec2 p ) {
+    ivec2 n = p.x * ivec2(3, 37) + p.y * ivec2(311, 113);
+    n = (n << 13) ^ n;
+    n = n * (n * n * 15731 + 789221) + 1376312589;
+    return -1.0 + 2.0 * vec2( n & ivec2(0x0fffffff)) / float(0x0fffffff);
 }
 
-vec2 fade(vec2 t) {
-    return t * t * (3.0 - 2.0 * t);
-}
+// Gradient noise function with derivatives
+vec3 noised( in vec2 p ) {
+    ivec2 i = ivec2(floor(p));       // Grid cell
+    vec2 f = fract(p);               // Fractional part of p
 
-float perlin(vec2 uv) {
-    // Cell corners
-    vec2 p0 = floor(uv);  // Bottom-left corner
-    vec2 p1 = p0 + vec2(1.0, 0.0);  // Bottom-right corner
-    vec2 p2 = p0 + vec2(0.0, 1.0);  // Top-left corner
-    vec2 p3 = p0 + vec2(1.0, 1.0);  // Top-right corner
+    // Interpolation (cubic or quintic)
+    vec2 u = f * f * (3.0 - 2.0 * f);
+    vec2 du = 6.0 * f * (1.0 - f);
+    
+    // Hashing for grid corner gradients
+    vec2 ga = hash(i + ivec2(0, 0));
+    vec2 gb = hash(i + ivec2(1, 0));
+    vec2 gc = hash(i + ivec2(0, 1));
+    vec2 gd = hash(i + ivec2(1, 1));
 
-    // Local coordinates within the cell
-    vec2 localPos = fract(uv);
+    // Compute dot products for the noise value
+    float va = dot(ga, f - vec2(0.0, 0.0));
+    float vb = dot(gb, f - vec2(1.0, 0.0));
+    float vc = dot(gc, f - vec2(0.0, 1.0));
+    float vd = dot(gd, f - vec2(1.0, 1.0));
 
-    // Fade the local position
-    vec2 fadePos = fade(localPos);
-
-    // Gradients at each corner
-    vec2 g0 = randomGradient(p0);
-    vec2 g1 = randomGradient(p1);
-    vec2 g2 = randomGradient(p2);
-    vec2 g3 = randomGradient(p3);
-
-    // Distance vectors
-    vec2 d0 = localPos - vec2(0.0, 0.0);
-    vec2 d1 = localPos - vec2(1.0, 0.0);
-    vec2 d2 = localPos - vec2(0.0, 1.0);
-    vec2 d3 = localPos - vec2(1.0, 1.0);
-
-    // Dot products
-    float dot0 = dot(g0, d0);
-    float dot1 = dot(g1, d1);
-    float dot2 = dot(g2, d2);
-    float dot3 = dot(g3, d3);
-
-    // Interpolate along x and y axes
-    float lerpX0 = mix(dot0, dot1, fadePos.x);
-    float lerpX1 = mix(dot2, dot3, fadePos.x);
-    float value = mix(lerpX0, lerpX1, fadePos.y);
-
+    // Interpolate the noise value and its derivatives
+    vec3 value = vec3( va + u.x * (vb - va) + u.y * (vc - va) + u.x * u.y * (va - vb - vc + vd), 
+                       ga + u.x * (gb - ga) + u.y * (gc - ga) + u.x * u.y * (ga - gb - gc + gd) + 
+                       du * (u.yx * (va - vb - vc + vd) + vec2(vb, vc) - va));
     return value;
 }
 
-void main(void) {
-    const float zoom = 7.0;
-    vec3 st = vec3(vUV*zoom,1.0);
-    st += time* speed;
-    
-    float normalizedPerlin = (perlin(st.xy) + 1.0) * 0.5;
-
-    float smoothPerlin = smoothstep(0.3, 0.7, normalizedPerlin);
+void main() {
 
 
-//---------------------LIGHT START-----------
-    vec3 vLightPosition = vec3(20,0,20);
 
-    // World values
-    vec3 vPositionW = vec3(world * vec4(vPosition, 1.0));
-    vec3 vNormalW = normalize(vec3(world * vec4(vNormal, 0.0)));
-    vec3 viewDirectionW = normalize(cameraPosition - vPositionW);
+    // Get noise value based on position and time
+    vec3 n = noised( 8.0 * vUV + time * 4.0 );
 
-    // // Light
-     vec3 lightVectorW = normalize(vLightPosition - vPositionW);
-     
-         
-    // // diffuse
-     float ndl = max(0., dot(vNormalW, lightVectorW));
+    vec2 velocity = vec2(n.z, -n.y);
+    vec4 texColor = texture(textureSampler, vUV+velocity*speed/1000.0);
 
-     // Specular
-     vec3 angleW = normalize(viewDirectionW + lightVectorW);
-     float specComp = max(0., dot(vNormalW, angleW));
-     specComp = pow(specComp, max(1., 64.)) * 5.;
-//-----------------------LIGHT END--------------------------
+    // Generate the final color based on the noise
+    vec3 col = 0.5 + 0.5 * ((vUV.x > 0.0) ? n.yzx : n.xxx);
 
-//for light add *ndl
 
-    fragColor = vec4(vec3(smoothPerlin), 1.);
+    float rotatDeg = radians(45.0);
+    vec2 rotatedUV = rotatDeg * vUV;
+
+    mat2 rotation = mat2(cos(rotatDeg), -sin(rotatDeg), sin(rotatDeg), cos(rotatDeg));
+        vec2 sinkVectorField = vec2(
+        0.5-rotatedUV.x,
+        0.5-rotatedUV.y
+    );
+
+    //sinkVectorField for sort of vortex vector field
+    //fragColor = vec4(sinkVectorField,0.0, 1.0);
+    fragColor = vec4(texColor.xyz, 1.0);
+
 }

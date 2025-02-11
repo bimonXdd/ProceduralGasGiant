@@ -3,52 +3,37 @@ import * as BABYLON from '@babylonjs/core';
 // Setup canvas and engine
 const canvas = document.getElementById('renderCanvas');
 const engine = new BABYLON.Engine(canvas, true);
-
-const slider = document.getElementById("slider");
-var speedValue = document.getElementById("speedValue");
-
-const fbmValue = document.getElementById("fbmValue");
-var fbmValueText = document.getElementById("fbmValueText");
-
-const fbmOctavesValue = document.getElementById("fbmOctavesValue");
-var fbmOctavesValueText = document.getElementById("fbmOctavesText");
-
-const fbmShiftValue = document.getElementById("fbmShiftValue");
-var fbmShiftValueText = document.getElementById("fbmShiftText");
-
-const fbmAmplitudeValue = document.getElementById("fbmAmplitudeValue");
-var fbmAmplitudeValueText = document.getElementById("fbmAmplitudeText"); 
+var curlNoise;
+var plane;
+var src;
+var des;
+var frameCount = 0;
+var tempTexture;
+var tree;
 
 const createScene = function() {
   const scene = new BABYLON.Scene(engine);
+  const camera = new BABYLON.FreeCamera("orthoCamera", new BABYLON.Vector3(0, 0, 0), scene);
+  camera.mode = BABYLON.Camera.ORTHOGRAPHIC_CAMERA;
+  const size = 10;  // Controls zoom level
+  camera.orthoLeft = -size/2;
+  camera.orthoRight = size/2;
+  camera.orthoTop = size/2;
+  camera.orthoBottom = -size/2;
+  camera.minZ = 0.1;
+  camera.maxZ = 10;
+  camera.position.z = -4;
+  camera.upVector = new BABYLON.Vector3(0.0, 1.0, 0.0);
+  camera.setTarget(BABYLON.Vector3.Zero());
   // Create default camera and light
-  scene.createDefaultCameraOrLight(true, true, true);
+  //scene.createDefaultCameraOrLight(true, true, true);
+  scene.addCamera(camera);
+  plane = BABYLON.MeshBuilder.CreatePlane("plane", {size: size,sideOrientation : BABYLON.Mesh.FRONTSIDE} ,scene);
+  plane.position.z = 0;
+  plane.rotation = BABYLON.Vector3.Zero();
 
-  // Sphere mesh
-  //const sphere = BABYLON.MeshBuilder.CreateSphere("sphere", { segments: 16, diameter: 2 }, scene);
-  //sphere.position.y = 1; // Move the sphere slightly above the ground to make it visible
-  const plane = BABYLON.MeshBuilder.CreatePlane("plain",scene);
-  //const torus = BABYLON.MeshBuilder.CreateTorus("torus", { thickness: 0.1, diameter: 4}, scene);
-  //torus.position = new BABYLON.Vector3(0, 1, 0);
-  //torus.rotation.z = 0.4;
-  const shaderMaterial = new BABYLON.ShaderMaterial("shader", scene, "./gasGiantV1", {
-    attributes: ["position", "normal", "uv", "uv2"],
-    uniforms: [
-      "world",
-      "worldView",
-      "worldViewProjection",
-      "view",
-      "projection",
-      "time",
-      "speed",
-      "fbmValue", 
-      "fbmOctavesValue",
-      "fbmShiftValue",
-      "fbmAmplitudeValue",
-      "speed",
-    ],
-  });
-  const curlNoise = new BABYLON.ShaderMaterial("shader", scene, "./curlNoise", {
+
+  curlNoise = new BABYLON.ShaderMaterial("shader", scene, "./curlNoise", {
     attributes: ["position", "normal", "uv"],
     uniforms: [
       "world",
@@ -61,55 +46,71 @@ const createScene = function() {
     ],
   });
 
-
   // Texture for the material
-  const mainTexture = new BABYLON.Texture("wood.jpg", scene); // Example texture
-  const northStormTexture = new BABYLON.Texture("darkWood.jpg", scene); // Example texture
+  //src = new BABYLON.Texture("wood.jpg", scene); // Example texture
+  //des = new BABYLON.Texture("darkWood.jpg", scene); // Example texture
   curlNoise.setFloat("seed", Math.random()*1000);
-  curlNoise.setTexture("textureSampler", mainTexture);
-  shaderMaterial.setTexture("textureSampler2", northStormTexture);
-  var multiMaterial = new BABYLON.MultiMaterial("multi", scene);
-  var standardMaterial = new BABYLON.StandardMaterial("standardMat", scene);
-  standardMaterial.diffuseColor = new BABYLON.Color3(1, 0, 0);
+  tree = new BABYLON.Texture("flowers.png", scene);
+
+  src = new BABYLON.RenderTargetTexture(
+    'render to texture', // name 
+    512, // texture size
+    scene // the scene
+  );
+
+  des = new BABYLON.RenderTargetTexture(
+    'render to texture2', // name 
+    512, // texture size
+    scene // the scene
+  );
+  //scene.customRenderTargets.push(des);
   
   plane.material = curlNoise;
 
   scene.registerBeforeRender(function() {
-    const time = performance.now() * 0.001; // Time in seconds
-
-    const speed = parseFloat(slider.value); // Get speed value from the slider
-    speedValue.textContent  = speed;
-
-    fbmValueText.textContent = parseFloat(fbmValue.value);
-    
-    fbmOctavesValueText.textContent= fbmOctavesValue.value;
-
-    fbmShiftValueText.textContent = fbmShiftValue.value;
-
-    fbmAmplitudeValueText.textContent = fbmAmplitudeValue.value;
-    // Check if the speed value is valid
-    if (isNaN(speed)) {
-      console.error('Invalid speed value from slider:', slider.value);
-    } else {
-      shaderMaterial.setFloat("time", time);
-      shaderMaterial.setFloat("speed", speed); // Pass speed to the shader
-      shaderMaterial.setInt("fbmOctavesValue", fbmOctavesValue.value);
-      shaderMaterial.setFloat("fbmValue", parseFloat(fbmValue.value)); // Static value for fbmValue (you can modify this based on your needs)
-      shaderMaterial.setInt("fbmShiftValue", fbmShiftValue.value);
-      shaderMaterial.setFloat("fbmAmplitudeValue", parseFloat(fbmAmplitudeValue.value));
-      const width = engine.getRenderWidth();
-      const height = engine.getRenderHeight();
-      shaderMaterial.setVector2("resolution", new BABYLON.Vector2(width, height));
-    }
+    const time = performance.now(); // Time in seconds
   });
 
+  curlNoise.setTexture("textureSampler", tree);
+
+  src.renderList.push(plane);
+  des.renderList.push(plane);
+
+  
   return scene;
 }
 
 // Create the scene and run the engine
 const scene = createScene();
-engine.runRenderLoop(function() {
+var speed;
+var last=0;
+var sleepDuration = 16.0;
+engine.runRenderLoop(async function() {
+  let now = performance.now();
+  if (now-last > sleepDuration) {
+    console.log('asd');
+    last = now;
+  } else{
+    return;
+  }
   scene.render();
+
+  //console.log(des.uniqueId);
+  //scene.customRenderTargets = [];
+  scene.onAfterRenderObservable.addOnce(function() {
+    //curlNoise.setTexture("textureSampler", des);
+    if (des.isReadyForRendering()) {
+      des.render();
+  
+      [src, des] = [des, src];
+    
+      curlNoise.setTexture("textureSampler", src);
+    }
+  });
+  
+   speed = document.getElementById('speedSlider');
+   console.log(speed.value);
+   curlNoise.setFloat("speed", speed.value);
 });
 
 // Handle window resizing
