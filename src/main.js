@@ -10,6 +10,7 @@ var des;
 var frameCount = 0;
 var tempTexture;
 var tree;
+var tex2;
 
 const createScene = function() {
   const scene = new BABYLON.Scene(engine);
@@ -34,7 +35,7 @@ const createScene = function() {
 
 
   curlNoise = new BABYLON.ShaderMaterial("shader", scene, "./curlNoise", {
-    attributes: ["position", "normal", "uv"],
+    attributes: ["position", "normal", "uv", "uv2",],
     uniforms: [
       "world",
       "worldView",
@@ -50,7 +51,8 @@ const createScene = function() {
   //src = new BABYLON.Texture("wood.jpg", scene); // Example texture
   //des = new BABYLON.Texture("darkWood.jpg", scene); // Example texture
   curlNoise.setFloat("seed", Math.random()*1000);
-  tree = new BABYLON.Texture("flowers.png", scene);
+  tree = new BABYLON.Texture("wood.jpg", scene);
+  tex2 = new BABYLON.Texture("flowers.png", scene);
 
   src = new BABYLON.RenderTargetTexture(
     'render to texture', // name 
@@ -72,6 +74,7 @@ const createScene = function() {
   });
 
   curlNoise.setTexture("textureSampler", tree);
+  curlNoise.setTexture("textureSampler2", tex2); 
 
   src.renderList.push(plane);
   des.renderList.push(plane);
@@ -88,7 +91,6 @@ var sleepDuration = 16.0;
 engine.runRenderLoop(async function() {
   let now = performance.now();
   if (now-last > sleepDuration) {
-    console.log('asd');
     last = now;
   } else{
     return;
@@ -98,18 +100,16 @@ engine.runRenderLoop(async function() {
   //console.log(des.uniqueId);
   //scene.customRenderTargets = [];
   scene.onAfterRenderObservable.addOnce(function() {
-    //curlNoise.setTexture("textureSampler", des);
     if (des.isReadyForRendering()) {
       des.render();
   
       [src, des] = [des, src];
-    
+      curlNoise.setFloat("time", now);
       curlNoise.setTexture("textureSampler", src);
     }
   });
   
    speed = document.getElementById('speedSlider');
-   console.log(speed.value);
    curlNoise.setFloat("speed", speed.value);
 });
 
