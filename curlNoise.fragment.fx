@@ -126,13 +126,13 @@ void main() {
     //vec2 velocity = vec2(n.z, -n.y);
     //vec2 velocity = vec2(10.,0.);   // straight to right
 
-    float waveAmplitude = 2.;
+    float waveAmplitude = 0.1;
     vec2 rightMainMotion = vec2(10. ,sin(time/1000.0 * tex.x)*waveAmplitude);     //Right with a sine wave
-  
-    float vortexIntensity = 2.0;
+    
+    float vortexIntensity = 10.0;
     vec2 vortexLocation = vec2(.5);
     vec2 vortex = vec2(-(tex.y-vortexLocation.y), tex.x-vortexLocation.x)*vortexIntensity;
-    vec4 texColor = texture(textureSampler, tex+(rightMainMotion*vortex)*speed/1000.0);
+    vec4 texColor = texture(textureSampler, tex+(vortex+rightMainMotion)*speed/1000.0);
 
  
     fragColor = vec4(texColor.xyz, 1.0);

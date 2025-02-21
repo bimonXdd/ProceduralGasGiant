@@ -9,8 +9,7 @@ var src;
 var des;
 var frameCount = 0;
 var tempTexture;
-var tree;
-var tex2;
+var woodTexture;
 
 const createScene = function() {
   const scene = new BABYLON.Scene(engine);
@@ -51,8 +50,7 @@ const createScene = function() {
   //src = new BABYLON.Texture("wood.jpg", scene); // Example texture
   //des = new BABYLON.Texture("darkWood.jpg", scene); // Example texture
   curlNoise.setFloat("seed", Math.random()*1000);
-  tree = new BABYLON.Texture("wood.jpg", scene);
-  tex2 = new BABYLON.Texture("flowers.png", scene);
+  woodTexture = new BABYLON.Texture("wood.jpg", scene);
 
   src = new BABYLON.RenderTargetTexture(
     'render to texture', // name 
@@ -73,8 +71,7 @@ const createScene = function() {
     const time = performance.now(); // Time in seconds
   });
 
-  curlNoise.setTexture("textureSampler", tree);
-  curlNoise.setTexture("textureSampler2", tex2); 
+  curlNoise.setTexture("textureSampler", woodTexture);
 
   src.renderList.push(plane);
   des.renderList.push(plane);
