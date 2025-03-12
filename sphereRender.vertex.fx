@@ -9,9 +9,6 @@ in vec2 uv;
 // Uniforms
 uniform mat4 worldViewProjection;
 uniform vec3 t;
-uniform vec3 M1;
-uniform vec3 M2;
-uniform vec3 M3;
 
 // Varying
 out vec3 vPosition;
@@ -19,16 +16,16 @@ out vec3 vNormal;
 out vec3 vUV;
 
 void main(void) {
-    vec3 tester;
-    vec3 t0 = t;
-    mat3 M0 = transpose(mat3(
-        M1,M2,M3
-    )); 
-    tester = 2.*(vec3(uv.x, uv.y, 0.))-vec3(1., 1., 0.);
-    tester = M0 * tester;
-    tester += t0;
+    //vec3 t0 = vec3(0, -1, 0);
+    // mat3 M0 = transpose(mat3(
+    //     0., 0., 0.,
+    //     1., 0., 0.,
+    //     0., -1., 0.
+    // ));
+    //vUV = 2.*(vec3(uv.x, uv.y, 0.))-vec3(1., 1., 0.);
+    //vUV = M0 * vUV;
+    //vUV += t0;
 
-    vUV = tester;
    
     vec4 outPosition = worldViewProjection * vec4(position, 1.0);
     gl_Position = outPosition;
