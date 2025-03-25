@@ -12,8 +12,21 @@ uniform float speed;
 uniform float seed;
 uniform samplerCube textureSampler;
 
-// Refs
-uniform vec3 cameraPosition;
+uniform mat4 worldViewProjection;
+uniform vec3 t;
+uniform vec3 M1;
+uniform vec3 M2;
+uniform vec3 M3;
+uniform vec3 spotCOLOR;
+uniform vec3 spotCOLOR2;
+uniform vec3 spotCOLOR3;
+uniform float currentAmplitude;
+uniform float curlSpeed;
+uniform float jetSpeed;
+uniform float blendValue;
+uniform float vortexChangerate;
+uniform float vortexFrequency;
+
 out vec4 fragColor;
 
 struct Particle {
@@ -38,7 +51,7 @@ vec3 hash2( vec3 p )     // this hash is not production ready, please
 
 	// 1D hash by Hugo Elias
 	n = (n << 13) ^ n;
-    n = n * (n * n * 15731 + 789221) + 1376312589;
+    n = n * (n * n * int(seed) + 789221) + 1376312589;
     return -1.0+2.0*vec3( n & ivec3(0x0fffffff))/float(0x0fffffff);
 }
 
@@ -69,7 +82,7 @@ vec3 noised( in vec2 p) {
                        du * (u.yx * (va - vb - vc + vd) + vec2(vb, vc) - va));
     return value;
 }
-vec4 noised2( in vec3 x )
+vec4 noised2( in vec3 x , in vec3 vNormal)
 {
     // grid
     vec3 p = floor(x);
@@ -79,6 +92,8 @@ vec4 noised2( in vec3 x )
     vec3 u = w*w*w*(w*(w*6.0-15.0)+10.0);
     vec3 du = 30.0*w*w*(w*(w-2.0)+1.0);
     
+    //gradient - dot(gradient, normal) * normal;
+
     // gradients
     vec3 ga = hash2( p+vec3(0.0,0.0,0.0) );
     vec3 gb = hash2( p+vec3(1.0,0.0,0.0) );
@@ -89,15 +104,26 @@ vec4 noised2( in vec3 x )
     vec3 gg = hash2( p+vec3(0.0,1.0,1.0) );
     vec3 gh = hash2( p+vec3(1.0,1.0,1.0) );
     
+    //projections2
+    vec3 gaP = ga - dot(ga, vNormal) * vNormal; 
+    vec3 gbP = gb - dot(gb, vNormal) * vNormal; 
+    vec3 gcP = gc - dot(gc, vNormal) * vNormal; 
+    vec3 gdP = gd - dot(gd, vNormal) * vNormal; 
+    vec3 geP = ge - dot(ge, vNormal) * vNormal; 
+    vec3 gfP = gf - dot(gf, vNormal) * vNormal; 
+    vec3 ggP = gg - dot(gg, vNormal) * vNormal; 
+    vec3 ghP = gh - dot(gh, vNormal) * vNormal; 
+    
+
     // projections
-    float va = dot( ga, w-vec3(0.0,0.0,0.0) );
-    float vb = dot( gb, w-vec3(1.0,0.0,0.0) );
-    float vc = dot( gc, w-vec3(0.0,1.0,0.0) );
-    float vd = dot( gd, w-vec3(1.0,1.0,0.0) );
-    float ve = dot( ge, w-vec3(0.0,0.0,1.0) );
-    float vf = dot( gf, w-vec3(1.0,0.0,1.0) );
-    float vg = dot( gg, w-vec3(0.0,1.0,1.0) );
-    float vh = dot( gh, w-vec3(1.0,1.0,1.0) );
+    float va = dot( gaP, w-vec3(0.0,0.0,0.0) );
+    float vb = dot( gbP, w-vec3(1.0,0.0,0.0) );
+    float vc = dot( gcP, w-vec3(0.0,1.0,0.0) );
+    float vd = dot( gdP, w-vec3(1.0,1.0,0.0) );
+    float ve = dot( geP, w-vec3(0.0,0.0,1.0) );
+    float vf = dot( gfP, w-vec3(1.0,0.0,1.0) );
+    float vg = dot( ggP, w-vec3(0.0,1.0,1.0) );
+    float vh = dot( ghP, w-vec3(1.0,1.0,1.0) );
 	
     // interpolation
     float v = va + 
@@ -130,7 +156,7 @@ vec4 noised2( in vec3 x )
 //         // Apply a simple blur by averaging neighboring pixels around the grid point
 //         float blurRadius = 2.0;  // Adjust this to control how much blur is applied
 //         vec4 blurredColor = vec4(0.0);
-//         float totalWeight = 0.0;
+//         float totalWeight = 0.0;  
 
 //         // Loop over a small area around the grid point
 //         for (float dx = -blurRadius; dx <= blurRadius; dx++) {
@@ -156,6 +182,8 @@ vec4 noised2( in vec3 x )
 void main() {
     //vec3 tex = vUV;
     vec3 posOnsphere = normalize(vUV);
+    //posOnSphere.xzy = posOnSphere;
+    vec3 jet = vec3(0., 1., 0.);
     // vec2 tex2 = vUV.yz;
     // tex2 = tex2.yx;
     // vec2 tex = vec2(tex2.x, -tex2.y);
@@ -180,35 +208,73 @@ void main() {
     //     return;
     // }
 
-    //----------------------------------GRID END----------------------------------------------------
-    vec4 m = noised2(posOnsphere);
-    //vec3 n = noised(tex*19.0);
 
+    //----------------------------------GRID END----------------------------------------------------
+    float wavyFreq = 0.2;
+    float wavyAmp = 0.5;
+
+    vec4 m = noised2(cos(time/vortexChangerate)+posOnsphere*vortexFrequency, posOnsphere);
+    //Y range from 0 to -1  
+    // if(posOnsphere.y > -0.3 && posOnsphere.y < 0){
+    //     m += vec4(0, jet);
+    // } else if (posOnsphere.y < 0.3 && posOnsphere.y > 0) {
+    //     m -= vec4(0, jet);
+    // }
+    // if (posOnsphere.xy == vec2(0., 0.)){
+    //     m = vec4(-m.y, m.x, m.y, m.w);
+    // }
+    vec3 curl = cross(m.yzw, posOnsphere);
+    //vec3 sample_uv = normalize(posOnsphere + curl*speed/1000.0);
+
+    float vjetSpeed = jetSpeed * speed/1000.;
+    float curlSpeed = curlSpeed * speed/1000.;
+    vec3 upVec = vec3(0., 1., 0.);
+    vec3 v = normalize(cross(upVec, posOnsphere));
+    float B = sin((currentAmplitude * 3.14 * posOnsphere.y) / 2.);
+    float B2 = cos((currentAmplitude * 3.14 * posOnsphere.y) / 2.);
+    float Bn = abs(B);
+
+    vec3 jetSine = (vjetSpeed * sign(B) * v) * Bn;
+
+    vec3 jetSimulation = jetSine + (1. - Bn) * (curl * curlSpeed) *sign(B2);
+ 
+    vec3 sample_uv = normalize(posOnsphere+jetSimulation);
+    if(posOnsphere.y > 0.8){
+        sample_uv = normalize(posOnsphere + curl*speed/1000.0);
+    }
     //add quake lava motion to keep the gradient moving and thus the simulation moving 
     //Otherwise artifacts present (mixing and movement kind of stops)
-    float wavyFreq = 0.0002;
-    float wavyAmp = 0.1;
    // n.y = n.y + sin(time * speed/10000.0 +n.z * wavyFreq)*wavyAmp;
    // n.z = n.z + sin(time * speed/10000.0 +n.y * wavyFreq)*wavyAmp;
 
-    m.y = m.y + sin(time * speed/10000.0 +m.z * wavyFreq)*wavyAmp;
-    m.y = m.y + sin(time * speed/10000.0 +m.z * wavyFreq)*wavyAmp;
-    m.z = m.z + sin(time * speed/10000.0 +m.y * wavyFreq)*wavyAmp;
-    vec3 velocity = vec3(m.x, -m.y, m.z);
+    //  sample_uv.y = sample_uv.y + sin(time * speed/1000.0 +sample_uv.z * wavyFreq)*wavyAmp;
+    //  sample_uv.x = sample_uv.x + sin(time * speed/1000.0 +sample_uv.y * wavyFreq)*wavyAmp;
+    
     //vec2 velocity = vec2(n.z, -n.y);
-    //vec2 velocity = vec2(10.,0.);   // straight to right
 
-    // float waveAmplitude = 2.;
-    // vec2 rightMainMotion = vec2(10. ,sin(time/1000.0 * tex.x)*waveAmplitude);     //Right with a sine wave
+    //  float waveAmplitude = 0.05;
+    //  vec3 rightMainMotion = vec3(0. ,sin(time/1000.0 * sample_uv.y)*waveAmplitude, 1.);     //Right with a sine wave
   
     // float vortexIntensity = 2.0;
-    // vec2 vortexLocation = vec2(.5);
-    // vec2 vortex = vec2(-(tex.y-vortexLocation.y), tex.x-vortexLocation.x)*vortexIntensity;
+    // vec3 vortexLocation = vec3(.5);
+    // vec3 vortex = vec3(-(sample_uv.y-vortexLocation.y), sample_uv.x-vortexLocation.x, 0.0)*vortexIntensity;
     
     //vec4 texColor = texture(textureSampler, normalize(vec3(1.,tex+(rightMainMotion*vortex)*speed/1000.0)));
 
-    vec4 texColor2 = texture(textureSampler, normalize(velocity));
-    fragColor = vec4(texColor2.xyz, 1.0);
+    vec4 texColor2 = texture(textureSampler, sample_uv);
+    vec4 texColor3 = texture(textureSampler, posOnsphere);
+    vec3 finalCol = mix(texColor2, texColor3, blendValue).xyz;
+
+    if (B > 0.7){
+        finalCol = mix(finalCol, vec3(spotCOLOR), Bn/60.);
+    } else if (B < -0.7) {
+        finalCol = mix(finalCol, vec3(spotCOLOR2), Bn/60.);
+    } else {
+        finalCol = mix(finalCol, vec3(spotCOLOR3), Bn/60.);
+    }
+    
+
+    fragColor = vec4(finalCol, 1.0);
     //fragColor = vec4(1.0, 1.0, 0.0, 1.0);
 
 }

@@ -4,7 +4,7 @@
     <meta charset="UTF-8" />
     <link rel="icon" type="image/svg+xml" href="/vite.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Vite App</title>
+    <title>Gas Giant Generator</title>
     <link rel="stylesheet" href="./src/style.css">
   </head>
   <body>
@@ -12,32 +12,63 @@
     <div id="canvasZone"><canvas id="renderCanvas"></canvas></div>
     <script type="module" src="/src/main.js"></script>
     <div id="sliderContainer">
+      
       <div id="speedSliderContainer">
         <p>Speed Of simulation: </p>
-        <input type="range" id="speedSlider" min="0.0" max="10.0" step=".3" value="0.006" />
-        <span id="speedValue">0</span>
-      </div>
-      <div id="fbmValueSliderContainer">
-        <p>FBM value: </p>
-        <input type="range" id="fbmValue" min="0.02" max="10.0" step="0.1" value="0.1" />
-        <span id="fbmValueText">0</span>
-      </div>
-      <div id="fbmValueSliderContainer">
-        <p>FBM Octaves: </p>
-        <input type="range" id="fbmOctavesValue" min="5" max="16.0" step="1" value="8" />
-        <span id="fbmOctavesText">5</span>
-      </div>
-      <div id="fbmValueSliderContainer">
-        <p>FBM Shift: </p>
-        <input type="range" id="fbmShiftValue" min="0" max="360" step="10 " value="180" />
-        <span id="fbmShiftText">20</span>
-      </div>
-      <div id="fbmValueSliderContainer">
-        <p>FBM amplitude: </p>
-        <input type="range" id="fbmAmplitudeValue"  min="0.002" max="0.08" step="0.001" value="0.006" />
-        <span id="fbmAmplitudeText">0</span>
+        <input type="range" id="speedSlider" min="1.0" max="10.0" step="1." value="4.0"/>
+        <span id="speedValueText">4</span>
       </div>
 
+      <div id="COLORSliderContainer">
+        <p>COLOR 1: </p>
+        <input type="color" id="favcolor1" name="favcolor" value="#4195d1">
+      </div>
+      <div id="COLORS2liderContainer">
+        <p>COLOR 2:</p>
+        <input type="color" id="favcolor2" name="favcolor2" value="#96ebe2">
+      </div>
+      <div id="COLOR3SliderContainer">
+        <p>COLOR 3: </p>
+        <input type="color" id="favcolor3" name="favcolor3" value="#6ca39d">
+      </div>
+
+      <div id="valueSliderContainer">
+        <p>Amplitude: </p>
+        <input type="range" id="amplitudeValue"  min="0" max="20" step="0.5" value="5" />
+        <span id="amplitudeText">5</span>
+      </div>
+
+      <div id="curlSpeedContainer">
+        <p>Curl Speed: </p>
+        <input type="range" id="curlSpeed"  min="1" max="20" step="0.5" value="1" />
+        <span id="curlSpeedText">1</span>
+      </div>
+
+      <div id="jetSpeedContainer">
+        <p>Jet Speed: </p>
+        <input type="range" id="jetSpeed"  min="1" max="20" step="0.5" value="1" />
+        <span id="jetSpeedText">1</span>
+      </div>
+
+      <div id="blendContainer">
+        <p>Blend factor: </p>
+        <input type="range" id="blend"  min="0.01" max="0.3" step="0.01" value="0.1" />
+        <span id="blendText">1</span>
+      </div>
+
+      <div id="vortexChangerateContainer">
+        <p>Vortex Changerate: </p>
+        <input type="range" id="vortexChangerate"  min="10000" max="30000" step="1000" value="10000" />
+        <span id="vortexChangerateText">10000</span>
+      </div>
+
+      <div id="vortexFrequencyContainer">
+        <p>Vortex Frequency: </p>
+        <input type="range" id="vortexFrequency"  min="5" max="15" step="0.5" value="5" />
+        <span id="vortexFrequencyText">5.0</span>
+      </div>
+      
+      <button onclick="buttonPRESS()">SAVE</button>
     </div>
   </body>
 </html>

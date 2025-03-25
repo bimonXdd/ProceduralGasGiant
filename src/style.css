@@ -20,13 +20,15 @@ html, body {
 #sliderContainer {
   position: absolute;
   display: flex;
+  flex-direction: column;
   top: 10px;
   left: 10px;
-  width: 20rem;
+  width: 15rem;
+  height: 30rem;
   padding: 0.25rem;
   border-radius: 0.5rem;
-  background-color: white;
-  flex-direction: row;
+  background-color: rgb(46, 54, 85);
+  color: rgb(185, 189, 192);
 }
 
 p {

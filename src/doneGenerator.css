@@ -1,0 +1,23 @@
+html, body {
+    overflow: hidden;
+    width: 100%;
+    height: 100%;
+    margin: 0;
+    padding: 0;
+  }
+
+#renderCanvas2 {
+    width: 100%;
+    height: 100%;
+    touch-action: none;
+  }
+  
+#canvasZone2 {
+    width: 100%;
+    height: 100%;
+}
+
+p {
+    margin: 0;
+    padding: 0;
+  }
