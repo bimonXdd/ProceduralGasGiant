@@ -39,8 +39,11 @@ void main(void) {
     mat3 M0 = transpose(mat3(
         M1,M2,M3
     )); 
-    tester = 2.*vec3(uv.x, uv.y, 0.)-vec3(1., 1., 0.);
-    tester = vec3(-tester.y, tester.x, 0.); //alam-maatriksid 90kraadi
+    tester = 2. * vec3(uv.x, uv.y, 0.) - vec3(1., 1., 0.); //derivative (tuletis)
+    //uv (0 - 1) aga see muudab uv(-1 - 1)
+    tester = vec3(-tester.y, tester.x, 0.); //alam-maatriksid 90kraadi (tegelikult pole vajalik{muuda M'i vectorid})
+
+    
     tester = M0 * tester;
     tester += t0;
 

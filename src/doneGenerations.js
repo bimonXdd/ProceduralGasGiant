@@ -25,7 +25,7 @@ const createScene = function() {
   const sphere3= BABYLON.MeshBuilder.CreateSphere("sphere3", { diameter: 3 }, scene2);
   const sphere4 = BABYLON.MeshBuilder.CreateSphere("sphere4", { diameter: 3 }, scene2);
 
-  const standardMaterial5= new BABYLON.StandardMaterial("myMaterial5", scene2);
+  const standardMaterial5 = new BABYLON.StandardMaterial("myMaterial5", scene2);
   const standardMaterial1 = new BABYLON.StandardMaterial("myMaterial1", scene2);
   const standardMaterial2 = new BABYLON.StandardMaterial("myMaterial2", scene2);
   const standardMaterial3 = new BABYLON.StandardMaterial("myMaterial3", scene2);

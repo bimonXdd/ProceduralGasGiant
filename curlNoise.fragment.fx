@@ -104,7 +104,8 @@ vec4 noised2( in vec3 x , in vec3 vNormal)
     vec3 gg = hash2( p+vec3(0.0,1.0,1.0) );
     vec3 gh = hash2( p+vec3(1.0,1.0,1.0) );
     
-    //projections2
+    //projections2 (gradient on sfääri pinnal)
+    
     vec3 gaP = ga - dot(ga, vNormal) * vNormal; 
     vec3 gbP = gb - dot(gb, vNormal) * vNormal; 
     vec3 gcP = gc - dot(gc, vNormal) * vNormal; 
@@ -126,6 +127,7 @@ vec4 noised2( in vec3 x , in vec3 vNormal)
     float vh = dot( ghP, w-vec3(1.0,1.0,1.0) );
 	
     // interpolation
+    //plynoomiga interpolation vaata yle !!
     float v = va + 
               u.x*(vb-va) + 
               u.y*(vc-va) + 
@@ -213,7 +215,7 @@ void main() {
     float wavyFreq = 0.2;
     float wavyAmp = 0.5;
 
-    vec4 m = noised2(cos(time/vortexChangerate)+posOnsphere*vortexFrequency, posOnsphere);
+    vec4 m = noised2(time/vortexChangerate + posOnsphere*vortexFrequency, posOnsphere);
     //Y range from 0 to -1  
     // if(posOnsphere.y > -0.3 && posOnsphere.y < 0){
     //     m += vec4(0, jet);
@@ -229,19 +231,21 @@ void main() {
     float vjetSpeed = jetSpeed * speed/1000.;
     float curlSpeed = curlSpeed * speed/1000.;
     vec3 upVec = vec3(0., 1., 0.);
-    vec3 v = normalize(cross(upVec, posOnsphere));
-    float B = sin((currentAmplitude * 3.14 * posOnsphere.y) / 2.);
-    float B2 = cos((currentAmplitude * 3.14 * posOnsphere.y) / 2.);
+    vec3 v = normalize(cross(upVec, posOnsphere)); 
+
+    
+    float B = sin((currentAmplitude * 3.14 * posOnsphere.y) / 2.); //jet ida poole laius
+    float B2 = cos((currentAmplitude * 3.14 * posOnsphere.y) / 2.); //jet laane laius
     float Bn = abs(B);
 
-    vec3 jetSine = (vjetSpeed * sign(B) * v) * Bn;
+    vec3 jetSine = (vjetSpeed * B * v); 
 
-    vec3 jetSimulation = jetSine + (1. - Bn) * (curl * curlSpeed) *sign(B2);
+    vec3 jetSimulation = jetSine + (1. - Bn) * (curl * curlSpeed) * sign(B2); //kui jet and curl interp ja sign(B2) keerise suunaks
  
     vec3 sample_uv = normalize(posOnsphere+jetSimulation);
-    if(posOnsphere.y > 0.8){
-        sample_uv = normalize(posOnsphere + curl*speed/1000.0);
-    }
+    // if(posOnsphere.y > 0.8){
+    //     sample_uv = normalize(posOnsphere + curl*speed/1000.0);
+    // }
     //add quake lava motion to keep the gradient moving and thus the simulation moving 
     //Otherwise artifacts present (mixing and movement kind of stops)
    // n.y = n.y + sin(time * speed/10000.0 +n.z * wavyFreq)*wavyAmp;
@@ -275,6 +279,4 @@ void main() {
     
 
     fragColor = vec4(finalCol, 1.0);
-    //fragColor = vec4(1.0, 1.0, 0.0, 1.0);
-
 }
