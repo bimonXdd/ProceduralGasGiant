@@ -88,13 +88,13 @@ vec4 noised2( in vec3 x , in vec3 vNormal)
     vec3 p = floor(x);
     vec3 w = fract(x);
     
-    // quintic interpolant
+    // quintic interpolant (smoothing)
     vec3 u = w*w*w*(w*(w*6.0-15.0)+10.0);
     vec3 du = 30.0*w*w*(w*(w-2.0)+1.0);
     
     //gradient - dot(gradient, normal) * normal;
 
-    // gradients
+    // gradients (quite random for noise)
     vec3 ga = hash2( p+vec3(0.0,0.0,0.0) );
     vec3 gb = hash2( p+vec3(1.0,0.0,0.0) );
     vec3 gc = hash2( p+vec3(0.0,1.0,0.0) );
@@ -152,6 +152,21 @@ vec4 noised2( in vec3 x , in vec3 vNormal)
                    
     return vec4( v, d );                   
 }
+
+vec3 vortexField(vec3 p) {
+    float gamma = 1.5; // Vortex strength
+    return gamma * vec3(-p.y, p.x, 0.0); 
+}
+
+ vec4 storm( in vec3 torm , in vec3 posOnsphere) {
+
+    vec3 stormGradient = torm - posOnsphere;
+
+    stormGradient = stormGradient - dot(stormGradient, torm) * torm; 
+
+    float kaugus = (dot(stormGradient, torm) + 1.) / 2.;
+    return vec4(kaugus);
+ }
 
 // vec4 gridBlur(vec4 staticSample, vec2 gridUV)
 // {
@@ -214,8 +229,13 @@ void main() {
     //----------------------------------GRID END----------------------------------------------------
     float wavyFreq = 0.2;
     float wavyAmp = 0.5;
+    vec4 m;
+    vec4 n;
 
-    vec4 m = noised2(time/vortexChangerate + posOnsphere*vortexFrequency, posOnsphere);
+    m = noised2(time/vortexChangerate + posOnsphere*vortexFrequency, posOnsphere);
+
+    n = storm(vec3(0., 1., 0.), posOnsphere);
+    //vec4 n = storm(posOnsphere,posOnsphere); 
     //Y range from 0 to -1  
     // if(posOnsphere.y > -0.3 && posOnsphere.y < 0){
     //     m += vec4(0, jet);
@@ -233,7 +253,6 @@ void main() {
     vec3 upVec = vec3(0., 1., 0.);
     vec3 v = normalize(cross(upVec, posOnsphere)); 
 
-    
     float B = sin((currentAmplitude * 3.14 * posOnsphere.y) / 2.); //jet ida poole laius
     float B2 = cos((currentAmplitude * 3.14 * posOnsphere.y) / 2.); //jet laane laius
     float Bn = abs(B);
@@ -278,5 +297,8 @@ void main() {
     }
     
 
-    fragColor = vec4(finalCol, 1.0);
+    //fragColor = vec4(finalCol, 1.0);
+
+    fragColor = n;
+    //fragColor = vec4(1.0);
 }
