@@ -11,7 +11,7 @@
     <div id="app"></div>
     <div id="canvasZone"><canvas id="renderCanvas"></canvas></div>
     <script type="module" src="/src/main.js"></script>
-    <div id="sliderContainer">
+    <div id="optionsContainer">
       
       <div id="speedSliderContainer">
         <p>Speed Of simulation: </p>
@@ -30,6 +30,10 @@
       <div id="COLOR3SliderContainer">
         <p>COLOR 3: </p>
         <input type="color" id="favcolor3" name="favcolor3" value="#6ca39d">
+      </div>
+      <div id="COLOR3SliderContainer">
+        <p>STORM: </p>
+        <input type="color" id="favcolorstorm" name="favcolorstorm" value="#6ca39d">
       </div>
 
       <div id="valueSliderContainer">
@@ -69,6 +73,18 @@
       </div>
       
       <button onclick="buttonPRESS()">SAVE</button>
+      <div id="theStorm">
+        <p id="theStormTitle">****** The STORM options ******</p>
+        <p>xPOS:</p>
+        <input type="range" id="theStormX"  min="-1" max="1" step="0.1" value="0." />
+        <span id="theStormXtext">0.</span>
+        <p>yPOS:</p>
+        <input type="range" id="theStormY"  min="-1" max="1" step="0.1" value="0." />
+        <span id="theStormYtext">0.</span>
+
+        <p>Color: </p>
+        <input type="color" id="stormColor" name="stormColor" value="#4195d1">
+      </div>
     </div>
   </body>
 </html>

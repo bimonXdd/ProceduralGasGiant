@@ -36,15 +36,17 @@ import * as BABYLON from '@babylonjs/core';
   const COLOR_PICKER_ELEMENT1 = document.getElementById('favcolor1');
   const COLOR_PICKER_ELEMENT2 = document.getElementById('favcolor2');
   const COLOR_PICKER_ELEMENT3 = document.getElementById('favcolor3');
+  const COLOR_PICKER_ELEMENT_STORM = document.getElementById('favcolorstorm');
   var currentCOLOR = hexToRgb("#4195d1");
   var currentCOLOR2 = hexToRgb("#96ebe2");
   var currentCOLOR3 = hexToRgb("#6ca39d");
+  var currentCOLORstorm = hexToRgb("#6ca39d");
   COLOR_PICKER_ELEMENT1.addEventListener("input", (event) => {currentCOLOR = hexToRgb(event.target.value)}, false);
   COLOR_PICKER_ELEMENT2.addEventListener("input", (event) => {currentCOLOR2 = hexToRgb(event.target.value)}, false);
   COLOR_PICKER_ELEMENT3.addEventListener("input", (event) => {currentCOLOR3 = hexToRgb(event.target.value)}, false);
+  COLOR_PICKER_ELEMENT_STORM.addEventListener("input", (event) => {currentCOLORstorm = hexToRgb(event.target.value)}, false);
 
   //AMPLITUDE ----------------------------------------------------
-
   var currentAmplitude = 5; 
   const AMPLITUDE_VALUE = document.getElementById('amplitudeValue');
   var amplitudeText = document.getElementById('amplitudeText');
@@ -106,6 +108,15 @@ import * as BABYLON from '@babylonjs/core';
   window.buttonPRESS = () => {
     buttonPressed = true;
   }
+
+  //THE STORM --------------------------------------------------------
+  var stormValue = 0.;
+  const STORM_X_VALUE = document.getElementById('vortexFrequency');
+  var stormXvalueText = document.getElementById('vortexFrequency');
+  const STORM_Y_VALUE = document.getElementById('vortexFrequency');
+  var stormYvalueText = document.getElementById('vortexFrequency');
+  const STORM_COLOR_VALUE = document.getElementById('vortexFrequency');
+  var stormColorvalueText = document.getElementById('vortexFrequency');
 
   /**
    * 
@@ -489,6 +500,7 @@ import * as BABYLON from '@babylonjs/core';
     curlNoiseShaderMAT.setVector3("spotCOLOR", new BABYLON.Vector3(currentCOLOR.r/255.0, currentCOLOR.g/255.0, currentCOLOR.b/255.0));
     curlNoiseShaderMAT.setVector3("spotCOLOR2", new BABYLON.Vector3(currentCOLOR2.r/255.0, currentCOLOR2.g/255.0, currentCOLOR2.b/255.0));
     curlNoiseShaderMAT.setVector3("spotCOLOR3", new BABYLON.Vector3(currentCOLOR3.r/255.0, currentCOLOR3.g/255.0, currentCOLOR3.b/255.0));
+    curlNoiseShaderMAT.setVector3("currentCOLORstorm", new BABYLON.Vector3(currentCOLORstorm.r/255.0, currentCOLORstorm.g/255.0, currentCOLORstorm.b/255.0));
     curlNoiseShaderMAT.setFloat("currentAmplitude", currentAmplitude);
     curlNoiseShaderMAT.setFloat("time", currentTime);
     curlNoiseShaderMAT.setFloat("curlSpeed", curlSpeed);

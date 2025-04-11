@@ -20,6 +20,7 @@ uniform vec3 M3;
 uniform vec3 spotCOLOR;
 uniform vec3 spotCOLOR2;
 uniform vec3 spotCOLOR3;
+uniform vec3 currentCOLORstorm;
 uniform float currentAmplitude;
 uniform float curlSpeed;
 uniform float jetSpeed;
@@ -162,11 +163,16 @@ vec3 vortexField(vec3 p) {
 
     vec3 stormGradient = torm - posOnsphere;
 
-    stormGradient = stormGradient - dot(stormGradient, torm) * torm; 
+    stormGradient = stormGradient - dot(stormGradient, posOnsphere) * posOnsphere;
 
-    float kaugus = (dot(stormGradient, torm) + 1.) / 2.;
+    float kaugus = (dot(cross(torm, posOnsphere), normalize(torm)) + 1.) / 2.;
+    
     return vec4(kaugus);
  }
+
+
+
+
 
 // vec4 gridBlur(vec4 staticSample, vec2 gridUV)
 // {
@@ -201,9 +207,21 @@ void main() {
     vec3 posOnsphere = normalize(vUV);
     //posOnSphere.xzy = posOnSphere;
     vec3 jet = vec3(0., 1., 0.);
-    // vec2 tex2 = vUV.yz;
-    // tex2 = tex2.yx;
-    // vec2 tex = vec2(tex2.x, -tex2.y);
+
+    vec3 torm = normalize(vec3(-1., 0., 0.)); //Tormi pixel
+    vec3 w;
+    float distanceFromStormCenter = length(torm - posOnsphere);
+    if (length(torm - posOnsphere) < 0.3) { // kui vektori pikkus suurem kui 0.3, siis curl
+        float strength = smoothstep(0.7, 0.0, distanceFromStormCenter);
+        vec3 curlW = normalize(cross(torm, posOnsphere)); 
+        vec3 stretched = curlW * vec3(1.0, 0.4, 1.0); // scale Y axis to squash vertically
+
+        w = normalize(stretched) * strength * speed/100.;
+    };
+
+    
+
+
     //----------------------------------GRID Start----------------------------------------------------
     //float gridSize = 30.0;
     // Convert UV coordinates to screen-space coordinates
@@ -234,10 +252,13 @@ void main() {
 
     m = noised2(time/vortexChangerate + posOnsphere*vortexFrequency, posOnsphere);
 
-    n = storm(vec3(0., 1., 0.), posOnsphere);
+    //n = storm(vec3(0., .0, 1.), posOnsphere);
+
+    
+
     //vec4 n = storm(posOnsphere,posOnsphere); 
-    //Y range from 0 to -1  
-    // if(posOnsphere.y > -0.3 && posOnsphere.y < 0){
+    //Y range from 0 to -1      
+    // if(posOnsphere.y > -0.3 && posOnsphere.y < 0){   
     //     m += vec4(0, jet);
     // } else if (posOnsphere.y < 0.3 && posOnsphere.y > 0) {
     //     m -= vec4(0, jet);
@@ -245,11 +266,20 @@ void main() {
     // if (posOnsphere.xy == vec2(0., 0.)){
     //     m = vec4(-m.y, m.x, m.y, m.w);
     // }
+
     vec3 curl = cross(m.yzw, posOnsphere);
+    //vec3 stormCurl = posOnsphere;//cross(n.yzw, posOnsphere);
     //vec3 sample_uv = normalize(posOnsphere + curl*speed/1000.0);
+    //vec3 tormike = vec3(0., .0, 1.);
+
+    // if (length(tormike - posOnsphere) > 0.9) {
+    //     stormCurl = cross(tormike, posOnsphere);
+    // };
 
     float vjetSpeed = jetSpeed * speed/1000.;
     float curlSpeed = curlSpeed * speed/1000.;
+    float stormCurlSpeed = 15.0 * speed/100.;
+
     vec3 upVec = vec3(0., 1., 0.);
     vec3 v = normalize(cross(upVec, posOnsphere)); 
 
@@ -260,8 +290,11 @@ void main() {
     vec3 jetSine = (vjetSpeed * B * v); 
 
     vec3 jetSimulation = jetSine + (1. - Bn) * (curl * curlSpeed) * sign(B2); //kui jet and curl interp ja sign(B2) keerise suunaks
+    jetSimulation += (-w);
  
     vec3 sample_uv = normalize(posOnsphere+jetSimulation);
+    //vec3 sample_uv = normalize(posOnsphere + n.yzw);
+
     // if(posOnsphere.y > 0.8){
     //     sample_uv = normalize(posOnsphere + curl*speed/1000.0);
     // }
@@ -287,7 +320,7 @@ void main() {
     vec4 texColor2 = texture(textureSampler, sample_uv);
     vec4 texColor3 = texture(textureSampler, posOnsphere);
     vec3 finalCol = mix(texColor2, texColor3, blendValue).xyz;
-
+    //jet colors
     if (B > 0.7){
         finalCol = mix(finalCol, vec3(spotCOLOR), Bn/60.);
     } else if (B < -0.7) {
@@ -295,10 +328,21 @@ void main() {
     } else {
         finalCol = mix(finalCol, vec3(spotCOLOR3), Bn/60.);
     }
+    //storm colors (dar)
+    if (length(torm - posOnsphere) < 0.2) {
+      finalCol = mix(finalCol, currentCOLORstorm, distanceFromStormCenter/50.);
+    }
+    if (length(torm - posOnsphere) < 0.1) {
+      finalCol = mix(finalCol, currentCOLORstorm-vec3(0.2), distanceFromStormCenter/30.);
+    }
+    
     
 
-    //fragColor = vec4(finalCol, 1.0);
+    fragColor = vec4(finalCol, 1.0);
+    //fragColor = vec4(sample_uv, 1.0);
 
-    fragColor = n;
+    //fragColor = vec4(n.yzw, 1.0);
+    //fragColor = vec4(stormGradient.xyz, 1.0);
+    
     //fragColor = vec4(1.0);
 }

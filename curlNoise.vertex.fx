@@ -21,6 +21,7 @@ uniform vec3 M3;
 uniform vec3 spotCOLOR;
 uniform vec3 spotCOLOR2;
 uniform vec3 spotCOLOR3;
+uniform vec3 currentCOLORstorm;
 uniform float currentAmplitude;
 uniform float curlSpeed;
 uniform float jetSpeed;
