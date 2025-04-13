@@ -21,6 +21,8 @@ uniform vec3 spotCOLOR;
 uniform vec3 spotCOLOR2;
 uniform vec3 spotCOLOR3;
 uniform vec3 currentCOLORstorm;
+uniform float stormXValue;
+uniform float stormYValue;
 uniform float currentAmplitude;
 uniform float curlSpeed;
 uniform float jetSpeed;
@@ -208,7 +210,7 @@ void main() {
     //posOnSphere.xzy = posOnSphere;
     vec3 jet = vec3(0., 1., 0.);
 
-    vec3 torm = normalize(vec3(-1., 0., 0.)); //Tormi pixel
+    vec3 torm = normalize(vec3(1., stormYValue, stormXValue)); //Tormi pixel
     vec3 w;
     float distanceFromStormCenter = length(torm - posOnsphere);
     if (length(torm - posOnsphere) < 0.3) { // kui vektori pikkus suurem kui 0.3, siis curl
@@ -330,7 +332,7 @@ void main() {
     }
     //storm colors (dar)
     if (length(torm - posOnsphere) < 0.2) {
-      finalCol = mix(finalCol, currentCOLORstorm, distanceFromStormCenter/50.);
+      finalCol = mix(finalCol, currentCOLORstorm, distanceFromStormCenter/30.);
     }
     if (length(torm - posOnsphere) < 0.1) {
       finalCol = mix(finalCol, currentCOLORstorm-vec3(0.2), distanceFromStormCenter/30.);
