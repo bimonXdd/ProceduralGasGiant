@@ -47,7 +47,7 @@
 
       <div id="jetSpeedContainer">
         <p>Jet Speed: </p>
-        <input type="range" id="jetSpeed"  min="1" max="20" step="0.5" value="2.0" />
+        <input type="range" id="jetSpeed"  min="0" max="20" step="0.5" value="2.0" />
         <span id="jetSpeedText">2.0</span>
       </div>
 
@@ -58,8 +58,8 @@
       </div>
 
       <div id="vortexChangerateContainer">
-        <p>Vortex Changerate: </p>
-        <input type="range" id="vortexChangerate"  min="10000" max="30000" step="1000" value="10000" />
+        <p>Vortex Changerate(Reverse slider): </p>
+        <input type="range" id="vortexChangerate"  min="1000" max="30000" step="1000" value="10000" />
         <span id="vortexChangerateText">10000</span>
       </div>
 
@@ -67,6 +67,11 @@
         <p>Vortex Frequency: </p>
         <input type="range" id="vortexFrequency"  min="5" max="15" step="0.5" value="5" />
         <span id="vortexFrequencyText">5.0</span>
+      </div>
+
+      <div id="lightController">
+        <p>Phong light: </p>
+        <input type="checkbox" id="light" Checked/>
       </div>
       
       <button onclick="buttonPRESS()">SAVE</button>
@@ -81,6 +86,10 @@
 
         <p>Color: </p>
         <input type="color" id="stormColor" name="stormColor" value="#4195d1">
+
+        <p>Storm size:</p>
+        <input type="range" id="theStormSize"  min="0" max="1" step="0.05" value="0." />
+        <span id="theStormSizeText">0.</span>
       </div>
     </div>
   </body>

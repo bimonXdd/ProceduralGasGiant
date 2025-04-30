@@ -24,6 +24,7 @@ uniform vec3 spotCOLOR3;
 uniform vec3 currentCOLORstorm;
 uniform float stormXValue;
 uniform float stormYValue;
+uniform float stormSizeValue;
 uniform float currentAmplitude;
 uniform float curlSpeed;
 uniform float jetSpeed;
@@ -45,7 +46,6 @@ void main(void) {
     tester = 2. * vec3(uv.x, uv.y, 0.) - vec3(1., 1., 0.); //derivative (tuletis)
     //uv (0 - 1) aga see muudab uv(-1 - 1)
     tester = vec3(-tester.y, tester.x, 0.); //alam-maatriksid 90kraadi (tegelikult pole vajalik{muuda M'i vectorid})
-
     
     tester = M0 * tester;
     tester += t0;

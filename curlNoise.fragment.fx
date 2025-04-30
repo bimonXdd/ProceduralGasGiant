@@ -23,6 +23,7 @@ uniform vec3 spotCOLOR3;
 uniform vec3 currentCOLORstorm;
 uniform float stormXValue;
 uniform float stormYValue;
+uniform float stormSizeValue;
 uniform float currentAmplitude;
 uniform float curlSpeed;
 uniform float jetSpeed;
@@ -108,7 +109,7 @@ vec4 noised2( in vec3 x , in vec3 vNormal)
     vec3 gh = hash2( p+vec3(1.0,1.0,1.0) );
     
     //projections2 (gradient on sfääri pinnal)
-    
+    //projection rejection formula
     vec3 gaP = ga - dot(ga, vNormal) * vNormal; 
     vec3 gbP = gb - dot(gb, vNormal) * vNormal; 
     vec3 gcP = gc - dot(gc, vNormal) * vNormal; 
@@ -204,24 +205,68 @@ vec3 vortexField(vec3 p) {
 //     return mix(staticSample, blurredColor, blendFactor);;
 // }
 
+
+// used instead of pwo because the arg of pow can't be negative
+vec3 oklab_mix_pow_helper (vec3 x){
+    return sign(x) * pow(abs(x), vec3(1.0/3.0));
+}
+
+//small color correction used instead of mix
+// https://bottosson.github.io/posts/oklab
+//Method from https://www.shadertoy.com/view/ttcyRS
+vec3 oklab_mix( vec3 colA, vec3 colB, float h )
+{
+    mat3 kCONEtoLMS = mat3(                
+            0.4121656120,  0.2118591070,  0.0883097947,
+            0.5362752080,  0.6807189584,  0.2818474174,
+            0.0514575653,  0.1074065790,  0.6302613616);
+    mat3 kLMStoCONE = mat3(
+            4.0767245293, -1.2681437731, -0.0041119885,
+        -3.3072168827,  2.6093323231, -0.7034763098,
+            0.2307590544, -0.3411344290,  1.7068625689);
+
+    // rgb to cone (arg of pow can't be negative)
+    vec3 lmsA = oklab_mix_pow_helper( kCONEtoLMS * colA );
+    vec3 lmsB = oklab_mix_pow_helper( kCONEtoLMS * colB );
+    //lerp
+    vec3 lms = mix( lmsA, lmsB, h );
+
+    // cone to rgb
+    return kLMStoCONE*(lms*lms*lms);
+}
+
+vec3 storms(vec3 stormLocation, vec3 posOnsphere, float speed, float stormSizeValue){
+    float distanceFromStormCenter = length(stormLocation - posOnsphere);
+        if (length(stormLocation - posOnsphere) < stormSizeValue) { // kui vektori pikkus suurem kui 0.2, siis curl
+            float strength = smoothstep(0.7, 0.0, distanceFromStormCenter);
+            vec3 curlW = normalize(cross(stormLocation, posOnsphere)); 
+            vec3 stretched = curlW * vec3(1.0, 0.2, 1.0); // scale Y axis to squash vertically
+
+            return normalize(stretched) * strength * speed;
+    };
+    return vec3(0.0);
+}
+
 void main() {
     //vec3 tex = vUV;
     vec3 posOnsphere = normalize(vUV);
     //posOnSphere.xzy = posOnSphere;
     vec3 jet = vec3(0., 1., 0.);
 
-    vec3 torm = normalize(vec3(1., stormYValue, stormXValue)); //Tormi pixel
-    vec3 w;
-    float distanceFromStormCenter = length(torm - posOnsphere);
-    if (length(torm - posOnsphere) < 0.3) { // kui vektori pikkus suurem kui 0.3, siis curl
-        float strength = smoothstep(0.7, 0.0, distanceFromStormCenter);
-        vec3 curlW = normalize(cross(torm, posOnsphere)); 
-        vec3 stretched = curlW * vec3(1.0, 0.4, 1.0); // scale Y axis to squash vertically
+    vec3 torm = normalize(vec3(1., stormYValue, stormXValue)); //Tormi pos
+    vec3 giantStorm = storms(torm, posOnsphere, speed/100., stormSizeValue);
+    float distanceFromGiantStormCenter = length(giantStorm - posOnsphere);
 
-        w = normalize(stretched) * strength * speed/100.;
-    };
 
-    
+    float microStormSize = 0.5;
+    float microStormSpeed = speed/60.;
+    vec3 microStorm1 = storms(normalize(vec3(0.6, 1, 0.)), posOnsphere, microStormSpeed, microStormSize);
+    vec3 microStorm2 = storms(normalize(vec3(-0.6, 1, 0.)), posOnsphere, microStormSpeed, microStormSize);
+    vec3 microStorm3 = storms(normalize(vec3(-0.3, 1, 0.5)), posOnsphere, microStormSpeed, microStormSize);
+    vec3 microStorm4 = storms(normalize(vec3(-0.3, 1, -0.5)), posOnsphere, microStormSpeed, microStormSize);
+    vec3 microStorm5 = storms(normalize(vec3(0.3, 1, 0.5)), posOnsphere, microStormSpeed, microStormSize);
+    vec3 microStorm6 = storms(normalize(vec3(0.3, 1, -0.5)), posOnsphere, microStormSpeed, microStormSize);
+
 
 
     //----------------------------------GRID Start----------------------------------------------------
@@ -292,9 +337,19 @@ void main() {
     vec3 jetSine = (vjetSpeed * B * v); 
 
     vec3 jetSimulation = jetSine + (1. - Bn) * (curl * curlSpeed) * sign(B2); //kui jet and curl interp ja sign(B2) keerise suunaks
-    jetSimulation += (-w);
+    jetSimulation += (-giantStorm);
  
+    //Northern polar storms
+    jetSimulation += (-microStorm1);
+    jetSimulation += (-microStorm2);
+    jetSimulation += (-microStorm3);
+    jetSimulation += (-microStorm4);
+    jetSimulation += (-microStorm5);
+    jetSimulation += (-microStorm6);
+
     vec3 sample_uv = normalize(posOnsphere+jetSimulation);
+    //vec3 sample_uv = normalize(posOnsphere+jetSine);
+    //vec3 sample_uv = normalize(posOnsphere);
     //vec3 sample_uv = normalize(posOnsphere + n.yzw);
 
     // if(posOnsphere.y > 0.8){
@@ -319,29 +374,31 @@ void main() {
     
     //vec4 texColor = texture(textureSampler, normalize(vec3(1.,tex+(rightMainMotion*vortex)*speed/1000.0)));
 
+
+
     vec4 texColor2 = texture(textureSampler, sample_uv);
     vec4 texColor3 = texture(textureSampler, posOnsphere);
-    vec3 finalCol = mix(texColor2, texColor3, blendValue).xyz;
+    vec3 finalCol = oklab_mix(texColor2.xyz, texColor3.xyz, blendValue).xyz;
     //jet colors
     if (B > 0.7){
-        finalCol = mix(finalCol, vec3(spotCOLOR), Bn/60.);
+        finalCol = oklab_mix(finalCol, vec3(spotCOLOR), Bn/30.);
     } else if (B < -0.7) {
-        finalCol = mix(finalCol, vec3(spotCOLOR2), Bn/60.);
+        finalCol = oklab_mix(finalCol, vec3(spotCOLOR2), Bn/30.);
     } else {
-        finalCol = mix(finalCol, vec3(spotCOLOR3), Bn/60.);
+        finalCol = oklab_mix(finalCol, vec3(spotCOLOR3), Bn/30.);
     }
     //storm colors (dar)
     if (length(torm - posOnsphere) < 0.2) {
-      finalCol = mix(finalCol, currentCOLORstorm, distanceFromStormCenter/30.);
+      finalCol = oklab_mix(finalCol, currentCOLORstorm, distanceFromGiantStormCenter/30.);
     }
     if (length(torm - posOnsphere) < 0.1) {
-      finalCol = mix(finalCol, currentCOLORstorm-vec3(0.2), distanceFromStormCenter/30.);
+      finalCol = oklab_mix(finalCol, currentCOLORstorm-vec3(0.2), distanceFromGiantStormCenter/30.);
     }
     
-    
 
+    //finalCol = texColor2.xyz;
     fragColor = vec4(finalCol, 1.0);
-    //fragColor = vec4(sample_uv, 1.0);
+    //fragColor = vec4(litColor, 1.0);
 
     //fragColor = vec4(n.yzw, 1.0);
     //fragColor = vec4(stormGradient.xyz, 1.0);

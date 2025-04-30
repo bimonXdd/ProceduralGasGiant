@@ -17,6 +17,7 @@ import * as BABYLON from '@babylonjs/core';
   var CYLShaderMAT; 
   var sphereShaderMAT;
   var curlNoiseShaderMAT;
+  var planetaryRingsMAT;
 
   //IMG SIZE
   const IMAGE_WIDTH = 1024;
@@ -109,6 +110,12 @@ import * as BABYLON from '@babylonjs/core';
     buttonPressed = true;
   }
 
+  //THE PHONG LIGHT --------------------------------------------------------
+  var lightValue = true;
+  const LIGHT_VALUE = document.getElementById('light');
+  LIGHT_VALUE.addEventListener("input", (event) => {lightValue = event.target.checked;}, false);
+
+
   //THE STORM --------------------------------------------------------
   var stormXValue = 0;
   const STORM_VALUE_X = document.getElementById('theStormX');
@@ -117,12 +124,21 @@ import * as BABYLON from '@babylonjs/core';
     stormXValue = event.target.value;
     stormXvalueText.textContent = stormXValue;
   }, false);
+
   var stormYValue = 0;
   const STORM_VALUE_Y = document.getElementById('theStormY');
   var stormYvalueText = document.getElementById('theStormYtext');
   STORM_VALUE_Y.addEventListener("input" ,(event) => {
     stormYValue = event.target.value;
     stormYvalueText.textContent = stormYValue;
+  }, false);
+
+  var stormSizeValue = 0;
+  const STORM_VALUE_SIZE = document.getElementById('theStormSize');
+  var stormSizeValueText = document.getElementById('theStormSizeText');
+  STORM_VALUE_SIZE.addEventListener("input" ,(event) => {
+    stormSizeValue = event.target.value;
+    stormSizeValueText.textContent = stormSizeValue;
   }, false);
 
   /**
@@ -258,7 +274,7 @@ import * as BABYLON from '@babylonjs/core';
       curlNoise.setTexture("textureSampler", cubeMap);
 
     */
-    const cubeMap = new BABYLON.CubeTexture("https://playground.babylonjs.com/textures/skybox", curlScene);
+      const cubeMap = new BABYLON.CubeTexture("https://playground.babylonjs.com/textures/skybox", curlScene);
       curlNoiseShaderMAT.setTexture("textureSampler", cubeMap);
 
     sourceRenderTargetTexture = new BABYLON.RenderTargetTexture(
@@ -315,7 +331,6 @@ import * as BABYLON from '@babylonjs/core';
     const plane = BABYLON.MeshBuilder.CreatePlane("plane", {size: size,sideOrientation : BABYLON.Mesh.FRONTSIDE} ,CYLscene);
     plane.position.z = 0;
     plane.rotation = BABYLON.Vector3.Zero();
-    curlNoiseShaderMAT
 
     CYLShaderMAT = new BABYLON.ShaderMaterial("shader", CYLscene, "./cylindricalProjection", {
       attributes: ["position", "uv",],
@@ -324,6 +339,7 @@ import * as BABYLON from '@babylonjs/core';
         "world",
       ],
     });
+
     plane.material = CYLShaderMAT;
     CYLShaderMAT.forceCompilationAsync(plane);
     CYLShaderMAT.setTexture("textureSampler", sourceRenderTargetTexture);
@@ -352,7 +368,7 @@ import * as BABYLON from '@babylonjs/core';
     const mainSceneCamera = new BABYLON.ArcRotateCamera("camera2", Math.PI/2, Math.PI/2, 2, new BABYLON.Vector3(0, 0, 10));
     mainSceneCamera.attachControl(CANVAS, true);
     mainScene.activeCamera = mainSceneCamera;
-
+    
     sphereShaderMAT = new BABYLON.ShaderMaterial("shader", mainScene, "./sphereRender", {
       attributes: ["position", "normal", "uv",],
       uniforms: [
@@ -363,13 +379,36 @@ import * as BABYLON from '@babylonjs/core';
         "projection",
         "time",
         "seed",
+        "lightValue"
       ],
     });
 
     const sphere = BABYLON.MeshBuilder.CreateSphere("sphere", { diameter: 3 }, mainScene);
+    const rings = BABYLON.MeshBuilder.CreatePlane("plane", { size: 10, sideOrientation: BABYLON.Mesh.DOUBLESIDE}, mainScene);
+    
+    //MATERIAL FOR RINGS SIMULATION
+    planetaryRingsMAT = new BABYLON.ShaderMaterial("shaderRings", mainScene, "./planetaryRings", {
+      attributes: ["position", "normal", "uv"],
+      uniforms: [
+        "world",
+        "worldView",
+        "worldViewProjection",
+        "world",
+        "time",
+        "speed",
+      ],
+    });
+    const randTexture = new BABYLON.Texture("/Ring.png", mainScene);
+    planetaryRingsMAT.setTexture("textureSampler", randTexture);
+    planetaryRingsMAT.backFaceCulling = false;
+    planetaryRingsMAT.alpha = 0.0; //HAS TO BE SET, OR WONT WORK IN SHADER FOR SOME REASON
+
+
+    rings.position.z = 6;
+    rings.rotation.x = 3.14/2; //rotate the rings 90degrees
+    rings.material = planetaryRingsMAT;
     sphere.material = sphereShaderMAT;
     sphere.position.z = 6;
-
     mainSceneCamera.setTarget(sphere.position);
     
   //--------------------------ANIMATION START -----------------------------------------
@@ -391,9 +430,11 @@ import * as BABYLON from '@babylonjs/core';
       animEarth.setKeys(sphereAnimationKeys);
       
       sphere.animations = [];
+      rings.animations = [];
       sphere.animations.push(animEarth);
-      
+      rings.animations.push(animEarth);
       scene.beginAnimation(sphere, 0, 340, true);
+      scene.beginAnimation(rings, 0, 340, true);
 
   //--------------------------ANIMATION END -----------------------------------------
     
@@ -510,6 +551,7 @@ import * as BABYLON from '@babylonjs/core';
     curlNoiseShaderMAT.setVector3("spotCOLOR3", new BABYLON.Vector3(currentCOLOR3.r/255.0, currentCOLOR3.g/255.0, currentCOLOR3.b/255.0));
     curlNoiseShaderMAT.setFloat("stormXValue", stormXValue);
     curlNoiseShaderMAT.setFloat("stormYValue", stormYValue);
+    curlNoiseShaderMAT.setFloat("stormSizeValue", stormSizeValue);
     curlNoiseShaderMAT.setVector3("currentCOLORstorm", new BABYLON.Vector3(currentCOLORstorm.r/255.0, currentCOLORstorm.g/255.0, currentCOLORstorm.b/255.0));
     curlNoiseShaderMAT.setFloat("currentAmplitude", currentAmplitude);
     curlNoiseShaderMAT.setFloat("time", currentTime);
@@ -519,6 +561,8 @@ import * as BABYLON from '@babylonjs/core';
     curlNoiseShaderMAT.setFloat("speed", speedValue);
     curlNoiseShaderMAT.setFloat("vortexChangerate", vortexChangerateValue); 
     curlNoiseShaderMAT.setFloat("vortexFrequency", vortexFrequencyValue);
+    sphereShaderMAT.setInt("lightValue", lightValue);
+    planetaryRingsMAT.setInt("lightValue", lightValue);
   });
 
   // Handle window resizing
