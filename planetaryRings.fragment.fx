@@ -47,21 +47,23 @@ void main() {
     float alpha = fadeIn * (1.0 - fadeOut);
 
     vec3 texColor = texture(textureSampler, vUV).rgb;
-    if (dist > 0.4 && dist < 0.401){
-        alpha = 0.0;
-    } else if (dist > 0.403 && dist < 0.41){
-        alpha = 0.0;
-    }
+
 
     vec3 normalizedUV = normalize(vPosition);
 
-    vec3 lightDir = normalize(vec3(0.0, 0.5, 1.0)); // Example light direction
+    vec3 lightDir = normalize(vec3(1.0, 0.5, 0.0)); // Example light direction
     vec3 lightColor = vec3(1.0); // White light
     float ambientStrength = 0.01;
     vec3 litColor = phongLightingNoSpecular(texColor, normalizedUV, lightDir, lightColor, ambientStrength);
+
+    if (ringsValue != 1) {
+        alpha = 0.0;
+    }
+
     if (lightValue == 1) {
         fragColor = vec4(litColor, alpha);
     } else {
         fragColor = vec4(texColor, alpha);
     }
+
 }

@@ -7,7 +7,7 @@ in vec2 uv;
 
 uniform mat4 worldViewProjection;
 uniform int lightValue;
-
+uniform int ringsValue;
 out vec3 vPosition;
 out vec3 vNormal;
 out vec2 vUV;

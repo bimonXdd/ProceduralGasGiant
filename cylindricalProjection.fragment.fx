@@ -7,12 +7,15 @@ out vec4 fragColor;
 
 void main() {
     vec2 UV2 = (vUV*2)-1.0;
+    
     // Cylindrical equal-area projection formula
-    float theta = UV2.x * 3.14159265;  // Longitude in radians
-    float y = UV2.y;                   // Preserved in equal-area projection
 
-    float x = cos(theta) * sqrt(1.0 - y * y);
-    float z = sin(theta) * sqrt(1.0 - y * y);
+    float y = UV2.y;                   // Preserved in equal-area projection
+    float r  = sqrt(1.0 - y * y);
+
+    float theta = UV2.x * 3.14159265;  // Longitude in radians
+    float x = cos(theta) * r;
+    float z = sin(theta) * r;
 
     vec3 direction = normalize(vec3(x, y, z));
 

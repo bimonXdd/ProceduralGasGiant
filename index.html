@@ -6,6 +6,21 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Gas Giant Generator</title>
     <link rel="stylesheet" href="./src/style.css">
+
+    <style>
+      #fps {
+          position: absolute;
+          background-color: black;
+          border: 2px solid red;
+          text-align: center;
+          font-size: 16px;
+          color: white;
+          top: 15px;
+          right: 10px;
+          width: 60px;
+          height: 20px;
+      }
+</style>
   </head>
   <body>
     <div id="app"></div>
@@ -20,24 +35,24 @@
       </div>
 
       <div id="COLORSliderContainer">
-        <p>COLOR 1: </p>
+        <p>JET COLOR 1: </p>
         <input type="color" id="favcolor1" name="favcolor" value="#4195d1">
       </div>
       <div id="COLORS2liderContainer">
-        <p>COLOR 2:</p>
+        <p>JET COLOR 2:</p>
         <input type="color" id="favcolor2" name="favcolor2" value="#96ebe2">
       </div>
       <div id="COLOR3SliderContainer">
-        <p>COLOR 3: </p>
+        <p>JET COLOR 3: </p>
         <input type="color" id="favcolor3" name="favcolor3" value="#6ca39d">
       </div>
 
-
       <div id="valueSliderContainer">
-        <p>Amplitude: </p>
-        <input type="range" id="amplitudeValue"  min="0" max="20" step="0.5" value="5" />
-        <span id="amplitudeText">5</span>
+        <p>Jet amplitude: </p>
+        <input type="range" id="frequencyValue"  min="0" max="20" step="0.5" value="5" />
+        <span id="frequencyText">5</span>
       </div>
+      <div id="fps">0</div>
 
       <div id="curlSpeedContainer">
         <p>Curl Speed: </p>
@@ -53,7 +68,7 @@
 
       <div id="blendContainer">
         <p>Blend factor: </p>
-        <input type="range" id="blend"  min="0.01" max="0.3" step="0.01" value="0.08" />
+        <input type="range" id="blend"  min="0.01" max="0.35" step="0.01" value="0.08" />
         <span id="blendText">0.08</span>
       </div>
 
@@ -70,11 +85,16 @@
       </div>
 
       <div id="lightController">
-        <p>Phong light: </p>
+        <p>Phong lighting: </p>
         <input type="checkbox" id="light" Checked/>
       </div>
-      
-      <button onclick="buttonPRESS()">SAVE</button>
+
+      <div id="ringsController">
+        <p>Rings: </p>
+        <input type="checkbox" id="rings" Checked/>
+      </div>
+
+      <button onclick="buttonPRESS()">SAVE TEXTURE</button>
       <div id="theStorm">
         <p id="theStormTitle">****** The STORM options ******</p>
         <p>xPOS:</p>

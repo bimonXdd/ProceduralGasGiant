@@ -24,7 +24,7 @@ uniform vec3 currentCOLORstorm;
 uniform float stormXValue;
 uniform float stormYValue;
 uniform float stormSizeValue;
-uniform float currentAmplitude;
+uniform float currentFrequency;
 uniform float curlSpeed;
 uniform float jetSpeed;
 uniform float blendValue;
@@ -38,7 +38,7 @@ struct Particle {
     vec2 velocity;
 };
 
-// 2D hash function (non-production ready)
+// 2D hash function
 vec2 hash( in ivec2 p ) {
     ivec2 n = p.x * ivec2(3, 37) + p.y * ivec2(311, 113);
     n = (n << 13) ^ n;
@@ -47,8 +47,8 @@ vec2 hash( in ivec2 p ) {
 }
 
 
-vec3 hash2( vec3 p )     // this hash is not production ready, please
-{                        // replace this by something better
+vec3 hash2( vec3 p )
+{                        
 	ivec3 n = ivec3( p.x*127 + p.y*311 + p.z*74,
                      p.x*269 + p.y*183 + p.z*246,
                      p.x*113 + p.y*271 + p.z*124);
@@ -108,7 +108,7 @@ vec4 noised2( in vec3 x , in vec3 vNormal)
     vec3 gg = hash2( p+vec3(0.0,1.0,1.0) );
     vec3 gh = hash2( p+vec3(1.0,1.0,1.0) );
     
-    //projections2 (gradient on sfääri pinnal)
+    //projections2 (gradient is on the surface of the sphere)
     //projection rejection formula
     vec3 gaP = ga - dot(ga, vNormal) * vNormal; 
     vec3 gbP = gb - dot(gb, vNormal) * vNormal; 
@@ -131,7 +131,6 @@ vec4 noised2( in vec3 x , in vec3 vNormal)
     float vh = dot( ghP, w-vec3(1.0,1.0,1.0) );
 	
     // interpolation
-    //plynoomiga interpolation vaata yle !!
     float v = va + 
               u.x*(vb-va) + 
               u.y*(vc-va) + 
@@ -162,51 +161,7 @@ vec3 vortexField(vec3 p) {
     return gamma * vec3(-p.y, p.x, 0.0); 
 }
 
- vec4 storm( in vec3 torm , in vec3 posOnsphere) {
-
-    vec3 stormGradient = torm - posOnsphere;
-
-    stormGradient = stormGradient - dot(stormGradient, posOnsphere) * posOnsphere;
-
-    float kaugus = (dot(cross(torm, posOnsphere), normalize(torm)) + 1.) / 2.;
-    
-    return vec4(kaugus);
- }
-
-
-
-
-
-// vec4 gridBlur(vec4 staticSample, vec2 gridUV)
-// {
-//         // Apply a simple blur by averaging neighboring pixels around the grid point
-//         float blurRadius = 2.0;  // Adjust this to control how much blur is applied
-//         vec4 blurredColor = vec4(0.0);
-//         float totalWeight = 0.0;  
-
-//         // Loop over a small area around the grid point
-//         for (float dx = -blurRadius; dx <= blurRadius; dx++) {
-//             for (float dy = -blurRadius; dy <= blurRadius; dy++) {
-//                 vec2 offset = vec2(dx, dy) / vec2(textureSize(textureSampler, 0));  // Convert to UV space
-//                 //vec4 sampleX = texture(textureSampler, gridUV + offset);
-
-//                 // Calculate the weight based on distance from the grid point
-//                 float weight = exp(-0.5 * (dx * dx + dy * dy) / (blurRadius * blurRadius));  // Gaussian weight
-//                 blurredColor += sampleX * weight;
-//                 totalWeight += weight;
-//             }
-//         }
-
-//         // Normalize the color
-//         blurredColor /= totalWeight;
-
-//         // Weighted blend between original staticSample and the blurred background
-//         float blendFactor = 0.0;  // % of the background blur added to each 
-//     return mix(staticSample, blurredColor, blendFactor);;
-// }
-
-
-// used instead of pwo because the arg of pow can't be negative
+// used instead of pow because the arg of pow can't be negative
 vec3 oklab_mix_pow_helper (vec3 x){
     return sign(x) * pow(abs(x), vec3(1.0/3.0));
 }
@@ -248,9 +203,7 @@ vec3 storms(vec3 stormLocation, vec3 posOnsphere, float speed, float stormSizeVa
 }
 
 void main() {
-    //vec3 tex = vUV;
     vec3 posOnsphere = normalize(vUV);
-    //posOnSphere.xzy = posOnSphere;
     vec3 jet = vec3(0., 1., 0.);
 
     vec3 torm = normalize(vec3(1., stormYValue, stormXValue)); //Tormi pos
@@ -258,40 +211,15 @@ void main() {
     float distanceFromGiantStormCenter = length(giantStorm - posOnsphere);
 
 
-    float microStormSize = 0.5;
-    float microStormSpeed = speed/60.;
-    vec3 microStorm1 = storms(normalize(vec3(0.6, 1, 0.)), posOnsphere, microStormSpeed, microStormSize);
-    vec3 microStorm2 = storms(normalize(vec3(-0.6, 1, 0.)), posOnsphere, microStormSpeed, microStormSize);
-    vec3 microStorm3 = storms(normalize(vec3(-0.3, 1, 0.5)), posOnsphere, microStormSpeed, microStormSize);
-    vec3 microStorm4 = storms(normalize(vec3(-0.3, 1, -0.5)), posOnsphere, microStormSpeed, microStormSize);
-    vec3 microStorm5 = storms(normalize(vec3(0.3, 1, 0.5)), posOnsphere, microStormSpeed, microStormSize);
-    vec3 microStorm6 = storms(normalize(vec3(0.3, 1, -0.5)), posOnsphere, microStormSpeed, microStormSize);
+    float smallStormSize = 0.5;
+    float smallStormSpeed = speed/80.;
+    vec3 smallStorm1 = storms(normalize(vec3(0.6, 1, 0.)), posOnsphere, smallStormSpeed, smallStormSize);
+    vec3 smallStorm2 = storms(normalize(vec3(-0.6, 1, 0.)), posOnsphere, smallStormSpeed, smallStormSize);
+    vec3 smallStorm3 = storms(normalize(vec3(-0.3, 1, 0.5)), posOnsphere, smallStormSpeed, smallStormSize);
+    vec3 smallStorm4 = storms(normalize(vec3(-0.3, 1, -0.5)), posOnsphere, smallStormSpeed, smallStormSize);
+    vec3 smallStorm5 = storms(normalize(vec3(0.3, 1, 0.5)), posOnsphere, smallStormSpeed, smallStormSize);
+    vec3 smallStorm6 = storms(normalize(vec3(0.3, 1, -0.5)), posOnsphere, smallStormSpeed, smallStormSize);
 
-
-
-    //----------------------------------GRID Start----------------------------------------------------
-    //float gridSize = 30.0;
-    // Convert UV coordinates to screen-space coordinates
-    //vec3 screenUV = vUV * vec3(textureSize(textureSampler, 0));
-
-    // Find the nearest grid point in screen space
-    //vec2 gridPoint = (floor(screenUV / gridSize) + 0.5) * gridSize;
-    // Convert the grid point back to UV space
-    //vec2 gridUV = gridPoint / vec2(textureSize(textureSampler, 0));
-
-    //vec4 staticSample = texture(textureSampler, gridUV);        //Original picture sampled
-    
-    // Calculate the distance from the current pixel to the nearest grid point
-    // float dist = length(screenUV - gridPoint);
-    // // Define a threshold for how close a pixel needs to be to the grid point
-    // float pointRadius = 1.0; // Adjust to control point siz
-    // if (dist < pointRadius) {
-    //     fragColor = gridBlur(staticSample, gridUV);
-    //     return;
-    // }
-
-
-    //----------------------------------GRID END----------------------------------------------------
     float wavyFreq = 0.2;
     float wavyAmp = 0.5;
     vec4 m;
@@ -299,29 +227,8 @@ void main() {
 
     m = noised2(time/vortexChangerate + posOnsphere*vortexFrequency, posOnsphere);
 
-    //n = storm(vec3(0., .0, 1.), posOnsphere);
-
-    
-
-    //vec4 n = storm(posOnsphere,posOnsphere); 
-    //Y range from 0 to -1      
-    // if(posOnsphere.y > -0.3 && posOnsphere.y < 0){   
-    //     m += vec4(0, jet);
-    // } else if (posOnsphere.y < 0.3 && posOnsphere.y > 0) {
-    //     m -= vec4(0, jet);
-    // }
-    // if (posOnsphere.xy == vec2(0., 0.)){
-    //     m = vec4(-m.y, m.x, m.y, m.w);
-    // }
-
     vec3 curl = cross(m.yzw, posOnsphere);
-    //vec3 stormCurl = posOnsphere;//cross(n.yzw, posOnsphere);
-    //vec3 sample_uv = normalize(posOnsphere + curl*speed/1000.0);
-    //vec3 tormike = vec3(0., .0, 1.);
 
-    // if (length(tormike - posOnsphere) > 0.9) {
-    //     stormCurl = cross(tormike, posOnsphere);
-    // };
 
     float vjetSpeed = jetSpeed * speed/1000.;
     float curlSpeed = curlSpeed * speed/1000.;
@@ -330,55 +237,29 @@ void main() {
     vec3 upVec = vec3(0., 1., 0.);
     vec3 v = normalize(cross(upVec, posOnsphere)); 
 
-    float B = sin((currentAmplitude * 3.14 * posOnsphere.y) / 2.); //jet ida poole laius
-    float B2 = cos((currentAmplitude * 3.14 * posOnsphere.y) / 2.); //jet laane laius
+    float B = sin((currentFrequency * 3.14 * posOnsphere.y) / 2.); //jet east
+    float B2 = cos((currentFrequency * 3.14 * posOnsphere.y) / 2.); //jet west
     float Bn = abs(B);
 
     vec3 jetSine = (vjetSpeed * B * v); 
 
-    vec3 jetSimulation = jetSine + (1. - Bn) * (curl * curlSpeed) * sign(B2); //kui jet and curl interp ja sign(B2) keerise suunaks
+    vec3 jetSimulation = jetSine + (1. - Bn) * (curl * curlSpeed) * sign(B2); //jet and curl combination as well as sign(B2) to determine the curl direction
     jetSimulation += (-giantStorm);
  
     //Northern polar storms
-    jetSimulation += (-microStorm1);
-    jetSimulation += (-microStorm2);
-    jetSimulation += (-microStorm3);
-    jetSimulation += (-microStorm4);
-    jetSimulation += (-microStorm5);
-    jetSimulation += (-microStorm6);
+     jetSimulation += (-smallStorm1);
+     jetSimulation += (-smallStorm2);
+     jetSimulation += (-smallStorm3);
+     jetSimulation += (-smallStorm4);
+     jetSimulation += (-smallStorm5);
+     jetSimulation += (-smallStorm6);
 
     vec3 sample_uv = normalize(posOnsphere+jetSimulation);
-    //vec3 sample_uv = normalize(posOnsphere+jetSine);
-    //vec3 sample_uv = normalize(posOnsphere);
-    //vec3 sample_uv = normalize(posOnsphere + n.yzw);
-
-    // if(posOnsphere.y > 0.8){
-    //     sample_uv = normalize(posOnsphere + curl*speed/1000.0);
-    // }
-    //add quake lava motion to keep the gradient moving and thus the simulation moving 
-    //Otherwise artifacts present (mixing and movement kind of stops)
-   // n.y = n.y + sin(time * speed/10000.0 +n.z * wavyFreq)*wavyAmp;
-   // n.z = n.z + sin(time * speed/10000.0 +n.y * wavyFreq)*wavyAmp;
-
-    //  sample_uv.y = sample_uv.y + sin(time * speed/1000.0 +sample_uv.z * wavyFreq)*wavyAmp;
-    //  sample_uv.x = sample_uv.x + sin(time * speed/1000.0 +sample_uv.y * wavyFreq)*wavyAmp;
-    
-    //vec2 velocity = vec2(n.z, -n.y);
-
-    //  float waveAmplitude = 0.05;
-    //  vec3 rightMainMotion = vec3(0. ,sin(time/1000.0 * sample_uv.y)*waveAmplitude, 1.);     //Right with a sine wave
-  
-    // float vortexIntensity = 2.0;
-    // vec3 vortexLocation = vec3(.5);
-    // vec3 vortex = vec3(-(sample_uv.y-vortexLocation.y), sample_uv.x-vortexLocation.x, 0.0)*vortexIntensity;
-    
-    //vec4 texColor = texture(textureSampler, normalize(vec3(1.,tex+(rightMainMotion*vortex)*speed/1000.0)));
-
-
 
     vec4 texColor2 = texture(textureSampler, sample_uv);
     vec4 texColor3 = texture(textureSampler, posOnsphere);
-    vec3 finalCol = oklab_mix(texColor2.xyz, texColor3.xyz, blendValue).xyz;
+    vec3 finalCol = oklab_mix(texColor2.xyz, texColor3.xyz, blendValue*2.).xyz;
+    
     //jet colors
     if (B > 0.7){
         finalCol = oklab_mix(finalCol, vec3(spotCOLOR), Bn/30.);
@@ -395,13 +276,5 @@ void main() {
       finalCol = oklab_mix(finalCol, currentCOLORstorm-vec3(0.2), distanceFromGiantStormCenter/30.);
     }
     
-
-    //finalCol = texColor2.xyz;
     fragColor = vec4(finalCol, 1.0);
-    //fragColor = vec4(litColor, 1.0);
-
-    //fragColor = vec4(n.yzw, 1.0);
-    //fragColor = vec4(stormGradient.xyz, 1.0);
-    
-    //fragColor = vec4(1.0);
 }

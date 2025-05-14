@@ -25,7 +25,7 @@ uniform vec3 currentCOLORstorm;
 uniform float stormXValue;
 uniform float stormYValue;
 uniform float stormSizeValue;
-uniform float currentAmplitude;
+uniform float currentFrequency;
 uniform float curlSpeed;
 uniform float jetSpeed;
 uniform float blendValue;
@@ -44,9 +44,9 @@ void main(void) {
         M1,M2,M3
     )); 
     tester = 2. * vec3(uv.x, uv.y, 0.) - vec3(1., 1., 0.); //derivative (tuletis)
-    //uv (0 - 1) aga see muudab uv(-1 - 1)
-    tester = vec3(-tester.y, tester.x, 0.); //alam-maatriksid 90kraadi (tegelikult pole vajalik{muuda M'i vectorid})
-    
+    //uv (0 - 1) to (-1 - 1)
+
+    //PS if OPENGL (U, V, 0) -> (U, -V, 0)
     tester = M0 * tester;
     tester += t0;
 
