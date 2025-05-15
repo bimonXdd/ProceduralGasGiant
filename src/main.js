@@ -25,7 +25,7 @@ import * as BABYLON from '@babylonjs/core';
   const PANORAMA_HEIGHT = 6000; 
 
   // SIZE
-  const CUBEMAP_SIZE = 4096;
+  const CUBEMAP_SIZE = 800;
 
   //SIMULATION SPEED --------------------------------------------------
   var speedValue = 1.0;
