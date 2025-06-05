@@ -17,19 +17,44 @@ html, body {
   height: 100%;
 }
 
-#sliderContainer {
+#optionsContainer {
   position: absolute;
   display: flex;
+  flex-direction: column;
   top: 10px;
-  left: 10px;
-  width: 20rem;
-  padding: 0.25rem;
-  border-radius: 0.5rem;
-  background-color: white;
-  flex-direction: row;
+  right: 0.3rem;
+  width: 15rem;
+  height: 30rem;
+  padding: 1rem 1rem 4rem 1rem;
+  background-color: rgb(45, 46, 53);
+  color: rgb(185, 189, 192);
+}
+
+button {
+  margin: 0rem;
+  width: 12rem;
 }
 
 p {
   margin: 0;
   padding: 0;
+}
+
+#theStorm {
+  margin-top: 1rem;
+  padding: 1rem 1rem 3rem 1rem;
+  position: relative;
+  width: 15rem;
+  background-color: rgb(51, 32, 32);
+  right: 1rem;
+}
+
+#theStormTitle {
+  margin-bottom: 1rem;
+  font-size: medium;
+  color: rgb(173, 133, 133);
+}
+
+input{
+  margin-bottom: 0.3rem;
 }
